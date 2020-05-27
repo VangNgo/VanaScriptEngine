@@ -10,7 +10,7 @@ public abstract class EncapsulatedObject extends AbstractObject implements Attri
 
     public static class EncapsulatedAttributeHandler<T extends EncapsulatedObject> extends AttributeHandler<T> {
         // TODO: Universal attributes?
-        
+
         @Override
         @SuppressWarnings("unchecked")
         public AbstractObject processAttribute(T object, Attribute attribute) {
