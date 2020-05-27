@@ -29,7 +29,7 @@ public abstract class AttributeHandler<T extends Attributable> {
         }
     }
 
-    public void registerAttribute(Attribute.Processor<T> processor, String... names) {
+    public void registerAttributes(Attribute.Processor<T> processor, String... names) {
         names = enforceNames(names);
         ObjectValidator.objectIsNonNull(processor, "A processor must be provided!");
         checkForNames(names);
@@ -43,7 +43,7 @@ public abstract class AttributeHandler<T extends Attributable> {
         }
     }
 
-    public void extendAttribute(Attribute.Processor<T> newProcessor, String... names) {
+    public void extendAttributes(Attribute.Processor<T> newProcessor, String... names) {
         names = enforceNames(names);
         ObjectValidator.objectIsNonNull(newProcessor, "A processor must be provided!");
         checkForNames(names);
@@ -51,7 +51,7 @@ public abstract class AttributeHandler<T extends Attributable> {
         for (String name : names) {
             if (!attributes.containsKey(name)) {
                 // TODO: Debug
-                registerAttribute(newProcessor,name);
+                registerAttributes(newProcessor, name);
             }
             else {
                 Attribute.Processor<T> oldP = attributes.get(name);

@@ -6,7 +6,7 @@ import net.vanabel.vanascriptengine.attribute.AttributeHandler;
 import net.vanabel.vanascriptengine.object.AbstractObject;
 import net.vanabel.vanascriptengine.object.Downgradeable;
 
-public abstract class EncapsulatedObject extends AbstractObject implements Attributable, Downgradeable {
+public abstract class EncapsulatedObject extends AbstractObject implements Attributable {
 
     public static class EncapsulatedAttributeHandler<T extends EncapsulatedObject> extends AttributeHandler<T> {
         // TODO: Universal attributes?
@@ -39,7 +39,14 @@ public abstract class EncapsulatedObject extends AbstractObject implements Attri
                 return result;
             }
 
-            // TODO: Downgrade object and re-process using downgraded object's attribute handler
+            if (object instanceof Downgradeable) {
+                AbstractObject downgrade = ((Downgradeable) object).downgrade();
+                if (downgrade instanceof Attributable) {
+                    Attributable atr = (Attributable) downgrade;
+                    // TODO: Downgrade object and re-process using downgraded object's attribute handler
+                    return null;
+                }
+            }
             return null;
         }
     }
