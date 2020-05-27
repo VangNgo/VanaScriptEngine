@@ -1,9 +1,10 @@
 package net.vanabel.vanascriptengine.attribute;
 
 import net.vanabel.vanascriptengine.object.AbstractObject;
+import net.vanabel.vanascriptengine.util.validator.ObjectValidator;
 
-import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.Map;
 import java.util.Set;
 
@@ -12,7 +13,7 @@ public abstract class AttributeHandler<T extends Attributable> {
     protected final Map<String, Attribute.Processor<T>> attributes = new HashMap<>();
 
     private static String[] enforceNames(String... n) {
-        ArrayList<String> nameList = new ArrayList<>(n.length);
+        Set<String> nameList = new HashSet<>(n.length);
         for (String name : n) {
             if (name == null || name.isEmpty() || name.matches(".*[\"'()=;]+.*")) {
                 continue;
@@ -22,25 +23,53 @@ public abstract class AttributeHandler<T extends Attributable> {
         return nameList.toArray(new String[0]);
     }
 
-    public boolean registerAttribute(Attribute.Processor<T> processor, String... names) {
-        names = enforceNames(names);
-        if (processor == null) {
-            throw new IllegalArgumentException("A processor must be provided!");
-        }
-        if (names.length == 0) {
+    protected static void checkForNames(String... n) {
+        if (n.length == 0) {
             throw new IllegalArgumentException("No valid attribute names were given!");
         }
+    }
 
-        boolean success = false;
+    public void registerAttribute(Attribute.Processor<T> processor, String... names) {
+        names = enforceNames(names);
+        ObjectValidator.objectIsNonNull(processor, "A processor must be provided!");
+        checkForNames(names);
+
         for (String name : names) {
             if (attributes.containsKey(name)) {
                 // TODO: Debug
                 continue;
             }
             attributes.put(name, processor);
-            success = true;
         }
-        return success;
+    }
+
+    public void extendAttribute(Attribute.Processor<T> newProcessor, String... names) {
+        names = enforceNames(names);
+        ObjectValidator.objectIsNonNull(newProcessor, "A processor must be provided!");
+        checkForNames(names);
+
+        for (String name : names) {
+            if (!attributes.containsKey(name)) {
+                // TODO: Debug
+                registerAttribute(newProcessor,name);
+            }
+            else {
+                Attribute.Processor<T> oldP = attributes.get(name);
+                // Only preserve DirectProcessor type if both processors are DirectProcessors
+                if (oldP instanceof Attribute.DirectProcessor && newProcessor instanceof Attribute.DirectProcessor) {
+                    attributes.replace(name, (Attribute.DirectProcessor<T>) (object, attribute) -> {
+                        AbstractObject result = newProcessor.process(object, attribute);
+                        return result != null ? result : oldP.process(object, attribute);
+                    });
+                }
+                else {
+                    attributes.replace(name, (object, attribute) -> {
+                        AbstractObject result = newProcessor.process(object, attribute);
+                        return result != null ? result : oldP.process(object, attribute);
+                    });
+                }
+            }
+        }
     }
 
     public boolean hasAttribute(String name) {
