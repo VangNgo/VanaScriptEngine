@@ -54,6 +54,6 @@ public abstract class AttributeHandler<T extends Attributable> {
     public Attribute.Processor<T> getProcessorForAttribute(String name) {
         return attributes.get(name);
     }
-    
+
     public abstract AbstractObject processAttribute(T object, Attribute attribute);
 }

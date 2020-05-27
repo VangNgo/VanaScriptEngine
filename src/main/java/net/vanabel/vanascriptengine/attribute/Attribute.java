@@ -16,6 +16,9 @@ public class Attribute implements Cloneable {
         AbstractObject process(T object, Attribute attribute);
     }
 
+    @FunctionalInterface
+    public interface DirectProcessor<T> extends Processor<T> {}
+
     public static class Component {
         private final String name, context;
         private Map<Class<? extends AbstractObject>, AbstractObject> contextObjCache;
