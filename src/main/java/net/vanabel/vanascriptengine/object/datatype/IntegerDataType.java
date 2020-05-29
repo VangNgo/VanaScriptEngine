@@ -64,6 +64,10 @@ public class IntegerDataType extends DataTypeObject {
         val = Long.parseLong(s);
     }
 
+    public NumberDataType toNumberType() {
+        return new NumberDataType(val);
+    }
+
     public String toBinary() {
         return "0b" + Long.toBinaryString(val);
     }

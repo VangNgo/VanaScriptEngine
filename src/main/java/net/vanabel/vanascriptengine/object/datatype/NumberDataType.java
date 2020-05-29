@@ -53,12 +53,24 @@ public class NumberDataType extends DataTypeObject {
         this.val = Double.parseDouble(val);
     }
 
+    /**
+     * Returns an {@link IntegerDataType} representation of this number, if possible.
+     * @throws ArithmeticException if this number is not a valid integer
+     */
+    public IntegerDataType toIntegerType() throws ArithmeticException {
+        double down = Math.rint(val);
+        if (Double.compare(down, val) != 0) {
+            throw new ArithmeticException(this + " cannot be converted to an integer.");
+        }
+        return new IntegerDataType((long) down);
+    }
+
     public double getValue() {
         return val;
     }
 
     @Override
     public String toString() {
-        return null;
+        return String.valueOf(val);
     }
 }
