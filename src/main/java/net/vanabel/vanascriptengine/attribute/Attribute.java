@@ -24,7 +24,7 @@ public class Attribute implements Cloneable {
         private Map<Class<? extends AbstractObject>, AbstractObject> contextObjCache;
 
         public Component(String name, String context) {
-            if (StringUtils.emptyStringAsNull(name) == null) {
+            if (StringUtils.emptyAsNull(name) == null) {
                 throw new IllegalArgumentException("Cannot have a nameless attribute!");
             }
             this.name = name;

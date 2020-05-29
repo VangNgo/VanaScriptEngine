@@ -5,6 +5,9 @@ import net.vanabel.vanascriptengine.attribute.Attribute;
 import net.vanabel.vanascriptengine.attribute.AttributeHandler;
 import net.vanabel.vanascriptengine.object.AbstractObject;
 import net.vanabel.vanascriptengine.object.Downgradeable;
+import net.vanabel.vanascriptengine.util.conversion.StringUtils;
+
+import java.util.Map;
 
 public abstract class EncapsulatedObject extends AbstractObject implements Attributable {
 
@@ -49,5 +52,14 @@ public abstract class EncapsulatedObject extends AbstractObject implements Attri
             }
             return null;
         }
+    }
+
+    public abstract String getObjectTypeName();
+
+    public abstract String getObjectTypeNamePlural();
+
+    public Map<String, AbstractObject> getCustomData() {
+        throw new IllegalStateException(StringUtils.capitalize(getObjectTypeNamePlural()) + " do not support" +
+                "custom data!");
     }
 }
