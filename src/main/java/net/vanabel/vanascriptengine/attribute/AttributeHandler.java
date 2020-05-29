@@ -1,6 +1,7 @@
 package net.vanabel.vanascriptengine.attribute;
 
 import net.vanabel.vanascriptengine.object.AbstractObject;
+import net.vanabel.vanascriptengine.util.conversion.StringUtils;
 import net.vanabel.vanascriptengine.util.validator.ObjectValidator;
 
 import java.util.HashMap;
@@ -12,17 +13,6 @@ public abstract class AttributeHandler<T extends Attributable> {
 
     protected final Map<String, Attribute.Processor<T>> attributes = new HashMap<>();
 
-    private static String[] enforceNames(String... n) {
-        Set<String> nameList = new HashSet<>(n.length);
-        for (String name : n) {
-            if (name == null || name.isEmpty() || name.matches(".*[\"'()=;]+.*")) {
-                continue;
-            }
-            nameList.add(name);
-        }
-        return nameList.toArray(new String[0]);
-    }
-
     protected static void checkForNames(String... n) {
         if (n.length == 0) {
             throw new IllegalArgumentException("No valid attribute names were given!");
@@ -30,8 +20,8 @@ public abstract class AttributeHandler<T extends Attributable> {
     }
 
     public void registerAttributes(Attribute.Processor<T> processor, String... names) {
-        names = enforceNames(names);
         ObjectValidator.objectIsNonNull(processor, "A processor must be provided!");
+        names = StringUtils.enforceValidNames(names);
         checkForNames(names);
 
         for (String name : names) {
@@ -44,8 +34,8 @@ public abstract class AttributeHandler<T extends Attributable> {
     }
 
     public void extendAttributes(Attribute.Processor<T> newProcessor, String... names) {
-        names = enforceNames(names);
         ObjectValidator.objectIsNonNull(newProcessor, "A processor must be provided!");
+        names = StringUtils.enforceValidNames(names);
         checkForNames(names);
 
         for (String name : names) {
