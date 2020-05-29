@@ -6,6 +6,7 @@ import net.vanabel.vanascriptengine.modifier.Modifiable;
 import net.vanabel.vanascriptengine.modifier.ModifierHandler;
 import net.vanabel.vanascriptengine.object.annotation.ObjectConstructor;
 import net.vanabel.vanascriptengine.object.annotation.ObjectMatcher;
+import net.vanabel.vanascriptengine.object.datatype.DataTypeObject;
 
 import java.lang.annotation.Annotation;
 import java.lang.invoke.CallSite;
@@ -33,6 +34,9 @@ public final class ObjectRegistry {
         MatcherMethod mat();
     }
 
+    // Placeholder for data types
+    private interface DataObjType<T extends DataTypeObject> extends ObjType<T> {}
+
     private interface AttrType<T extends AbstractObject & Attributable> extends ObjType<T> {
         AttributeHandler<T> aH();
     }
@@ -42,8 +46,6 @@ public final class ObjectRegistry {
     }
 
     private interface AttrModType<T extends AbstractObject & Attributable & Modifiable> extends AttrType<T>, ModType<T> {}
-
-    private final static Map<Class<? extends AbstractObject>, ObjType<? extends AbstractObject>> CLASS_TO_OBJECT = new HashMap<>();
 
     private final static String ATTRIBUTE_HANDLER_FIELD_NAME = "ATTRIBUTE_HANDLER";
     private final static String MODIFIER_HANDLER_FIELD_NAME = "MODIFIER_HANDLER";
@@ -82,7 +84,7 @@ public final class ObjectRegistry {
     }
 
     @SuppressWarnings("unchecked")
-    private static <T extends AbstractObject> ConstructorMethod<T> getConstrFromClasss(Class<T> objClass) {
+    private static <T extends AbstractObject> ConstructorMethod<T> getConstrFromClass(Class<T> objClass) {
         try {
             String methodName = null;
             for (Method m : objClass.getDeclaredMethods()) {
@@ -137,6 +139,30 @@ public final class ObjectRegistry {
         }
     }
 
+
+
+    private final static Map<Class<? extends AbstractObject>, ObjType<? extends AbstractObject>> CLASS_TO_OBJECT = new HashMap<>();
+
+    public static <T extends DataTypeObject> boolean registerDataType(Class<T> objClass) {
+        if (objClass == null) {
+            return false;
+        }
+        return CLASS_TO_OBJECT.putIfAbsent(objClass, new DataObjType<T>() {
+            final ConstructorMethod<T> c = getConstrFromClass(objClass);
+            final MatcherMethod m = getMatcherFromClass(objClass);
+
+            @Override
+            public ConstructorMethod<T> con() {
+                return c;
+            }
+
+            @Override
+            public MatcherMethod mat() {
+                return m;
+            }
+        }) == null;
+    }
+
     public static <T extends AbstractObject> boolean registerObject(Class<T> objClass) {
         if (objClass == null) {
             return false;
@@ -156,7 +182,7 @@ public final class ObjectRegistry {
             return false;
         }
         CLASS_TO_OBJECT.put(objClass, new ObjType<T>() {
-            final ConstructorMethod<T> c = getConstrFromClasss(objClass);
+            final ConstructorMethod<T> c = getConstrFromClass(objClass);
             final MatcherMethod m = getMatcherFromClass(objClass);
 
             @Override
@@ -192,7 +218,7 @@ public final class ObjectRegistry {
             // TODO: Debug?
         }
         CLASS_TO_OBJECT.put(objClass, new AttrType<T>() {
-            final ConstructorMethod<T> c = getConstrFromClasss(objClass);
+            final ConstructorMethod<T> c = getConstrFromClass(objClass);
             final MatcherMethod m = getMatcherFromClass(objClass);
             final AttributeHandler<T> aH = getAttrHandFromClass(objClass);
 
@@ -233,7 +259,7 @@ public final class ObjectRegistry {
             // TODO: Debug?
         }
         CLASS_TO_OBJECT.put(objClass, new ModType<T>() {
-            final ConstructorMethod<T> c = getConstrFromClasss(objClass);
+            final ConstructorMethod<T> c = getConstrFromClass(objClass);
             final MatcherMethod m = getMatcherFromClass(objClass);
             final ModifierHandler<T> mH = getModHandFromClass(objClass);
 
@@ -264,10 +290,10 @@ public final class ObjectRegistry {
             if (objType instanceof AttrModType) {
                 return false;
             }
-            // TODO: Debug?
+            // TODO: Debug, overriding weaker declarations
         }
         CLASS_TO_OBJECT.put(objClass, new AttrModType<T>() {
-            final ConstructorMethod<T> c = getConstrFromClasss(objClass);
+            final ConstructorMethod<T> c = getConstrFromClass(objClass);
             final MatcherMethod m = getMatcherFromClass(objClass);
             final AttributeHandler<T> aH = getAttrHandFromClass(objClass);
             final ModifierHandler<T> mH = getModHandFromClass(objClass);
