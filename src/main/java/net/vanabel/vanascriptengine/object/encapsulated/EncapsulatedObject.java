@@ -2,10 +2,8 @@ package net.vanabel.vanascriptengine.object.encapsulated;
 
 import net.vanabel.vanascriptengine.attribute.Attributable;
 import net.vanabel.vanascriptengine.attribute.Attribute;
-import net.vanabel.vanascriptengine.attribute.AttributeHandler;
 import net.vanabel.vanascriptengine.modifier.Modifiable;
 import net.vanabel.vanascriptengine.modifier.Modifier;
-import net.vanabel.vanascriptengine.modifier.ModifierHandler;
 import net.vanabel.vanascriptengine.object.AbstractObject;
 import net.vanabel.vanascriptengine.object.Downgradeable;
 import net.vanabel.vanascriptengine.util.conversion.StringUtils;
@@ -17,7 +15,7 @@ import java.util.Map;
  */
 public abstract class EncapsulatedObject extends AbstractObject implements Attributable, Cloneable {
 
-    public static class EncapsulatedAttributeHandler<T extends EncapsulatedObject> extends AttributeHandler<T> {
+    public static class AttributeHandler<T extends EncapsulatedObject> extends Attribute.Handler<T> {
         // TODO: Universal attributes?
 
         @Override
@@ -60,7 +58,7 @@ public abstract class EncapsulatedObject extends AbstractObject implements Attri
         }
     }
 
-    public static class EncapsulatedModifierHandler<T extends EncapsulatedObject & Modifiable> extends ModifierHandler<T> {
+    public static class ModifierHandler<T extends EncapsulatedObject & Modifiable> extends Modifier.Handler<T> {
 
         @Override
         public boolean processModifier(T object, Modifier modifier) {

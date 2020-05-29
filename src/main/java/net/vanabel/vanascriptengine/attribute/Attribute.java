@@ -4,10 +4,12 @@ import net.vanabel.vanascriptengine.object.AbstractObject;
 import net.vanabel.vanascriptengine.util.conversion.StringUtils;
 import net.vanabel.vanascriptengine.util.validator.ArrayValidator;
 import net.vanabel.vanascriptengine.util.validator.NumberValidator;
+import net.vanabel.vanascriptengine.util.validator.ObjectValidator;
 
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.Set;
 
 public class Attribute implements Cloneable {
 
@@ -18,6 +20,74 @@ public class Attribute implements Cloneable {
 
     @FunctionalInterface
     public interface DirectProcessor<T> extends Processor<T> {}
+
+    public abstract static class Handler<T extends Attributable> {
+
+        protected final Map<String, Processor<T>> attributes = new HashMap<>();
+
+        protected static void checkForNames(String... n) {
+            if (n.length == 0) {
+                throw new IllegalArgumentException("No valid attribute names were given!");
+            }
+        }
+
+        public void registerAttributes(Processor<T> processor, String... names) {
+            ObjectValidator.objectIsNonNull(processor, "An attribute processor must be provided!");
+            names = StringUtils.enforceValidNames(names);
+            checkForNames(names);
+
+            for (String name : names) {
+                if (attributes.containsKey(name)) {
+                    // TODO: Debug
+                    continue;
+                }
+                attributes.put(name, processor);
+            }
+        }
+
+        public void extendAttributes(Processor<T> newProcessor, String... names) {
+            ObjectValidator.objectIsNonNull(newProcessor, "An attribute processor must be provided!");
+            names = StringUtils.enforceValidNames(names);
+            checkForNames(names);
+
+            for (String name : names) {
+                if (!attributes.containsKey(name)) {
+                    // TODO: Debug
+                    registerAttributes(newProcessor, name);
+                }
+                else {
+                    Processor<T> oldP = attributes.get(name);
+                    // Only preserve DirectProcessor type if both processors are DirectProcessors
+                    if (oldP instanceof DirectProcessor && newProcessor instanceof DirectProcessor) {
+                        attributes.replace(name, (DirectProcessor<T>) (object, attribute) -> {
+                            AbstractObject result = newProcessor.process(object, attribute);
+                            return result != null ? result : oldP.process(object, attribute);
+                        });
+                    }
+                    else {
+                        attributes.replace(name, (object, attribute) -> {
+                            AbstractObject result = newProcessor.process(object, attribute);
+                            return result != null ? result : oldP.process(object, attribute);
+                        });
+                    }
+                }
+            }
+        }
+
+        public boolean hasAttribute(String name) {
+            return attributes.containsKey(name);
+        }
+
+        public Set<String> getAttributes() {
+            return attributes.keySet();
+        }
+
+        public Processor<T> getProcessorForAttribute(String name) {
+            return attributes.get(name);
+        }
+
+        public abstract AbstractObject processAttribute(T object, Attribute attribute);
+    }
 
     public static class Component {
         private final String name, context;

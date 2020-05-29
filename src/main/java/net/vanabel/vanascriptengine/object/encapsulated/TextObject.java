@@ -9,7 +9,7 @@ import net.vanabel.vanascriptengine.util.conversion.StringUtils;
 
 public class TextObject extends EncapsulatedObject {
 
-    public final static EncapsulatedAttributeHandler<TextObject> ATTRIBUTE_HANDLER = new EncapsulatedAttributeHandler<>();
+    public final static AttributeHandler<TextObject> ATTRIBUTE_HANDLER = new AttributeHandler<>();
 
     public static void registerAttributes(Attribute.Processor<TextObject> processor, String... names) {
         ATTRIBUTE_HANDLER.registerAttributes(processor, names);

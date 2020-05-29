@@ -1,9 +1,9 @@
 package net.vanabel.vanascriptengine.object;
 
 import net.vanabel.vanascriptengine.attribute.Attributable;
-import net.vanabel.vanascriptengine.attribute.AttributeHandler;
+import net.vanabel.vanascriptengine.attribute.Attribute;
 import net.vanabel.vanascriptengine.modifier.Modifiable;
-import net.vanabel.vanascriptengine.modifier.ModifierHandler;
+import net.vanabel.vanascriptengine.modifier.Modifier;
 import net.vanabel.vanascriptengine.object.annotation.ObjectConstructor;
 import net.vanabel.vanascriptengine.object.annotation.ObjectMatcher;
 import net.vanabel.vanascriptengine.object.datatype.DataTypeObject;
@@ -38,11 +38,11 @@ public final class ObjectRegistry {
     private interface DataObjType<T extends DataTypeObject> extends ObjType<T> {}
 
     private interface AttrType<T extends AbstractObject & Attributable> extends ObjType<T> {
-        AttributeHandler<T> aH();
+        Attribute.Handler<T> aH();
     }
 
     private interface ModType<T extends AbstractObject & Modifiable> extends ObjType<T> {
-        ModifierHandler<T> mH();
+        Modifier.Handler<T> mH();
     }
 
     private interface AttrModType<T extends AbstractObject & Attributable & Modifiable> extends AttrType<T>, ModType<T> {}
@@ -118,9 +118,9 @@ public final class ObjectRegistry {
     }
 
     @SuppressWarnings("unchecked")
-    private static <T extends AbstractObject & Attributable> AttributeHandler<T> getAttrHandFromClass(Class<T> objClass) {
+    private static <T extends AbstractObject & Attributable> Attribute.Handler<T> getAttrHandFromClass(Class<T> objClass) {
         try {
-            return (AttributeHandler<T>) objClass.getDeclaredField(ATTRIBUTE_HANDLER_FIELD_NAME).get(null);
+            return (Attribute.Handler<T>) objClass.getDeclaredField(ATTRIBUTE_HANDLER_FIELD_NAME).get(null);
         }
         catch (Exception e) {
             throw new IllegalStateException("Attributable object \"" + objClass.getSimpleName() + "\" does not have " +
@@ -129,9 +129,9 @@ public final class ObjectRegistry {
     }
 
     @SuppressWarnings("unchecked")
-    private static <T extends AbstractObject & Modifiable> ModifierHandler<T> getModHandFromClass(Class<T> objClass) {
+    private static <T extends AbstractObject & Modifiable> Modifier.Handler<T> getModHandFromClass(Class<T> objClass) {
         try {
-            return (ModifierHandler<T>) objClass.getDeclaredField(MODIFIER_HANDLER_FIELD_NAME).get(null);
+            return (Modifier.Handler<T>) objClass.getDeclaredField(MODIFIER_HANDLER_FIELD_NAME).get(null);
         }
         catch (Exception e) {
             throw new IllegalStateException("Modifiable object \"" + objClass.getSimpleName() + "\" does not have a " +
@@ -220,7 +220,7 @@ public final class ObjectRegistry {
         CLASS_TO_OBJECT.put(objClass, new AttrType<T>() {
             final ConstructorMethod<T> c = getConstrFromClass(objClass);
             final MatcherMethod m = getMatcherFromClass(objClass);
-            final AttributeHandler<T> aH = getAttrHandFromClass(objClass);
+            final Attribute.Handler<T> aH = getAttrHandFromClass(objClass);
 
             @Override
             public ConstructorMethod<T> con() {
@@ -233,7 +233,7 @@ public final class ObjectRegistry {
             }
 
             @Override
-            public AttributeHandler<T> aH() {
+            public Attribute.Handler<T> aH() {
                 return aH;
             }
         });
@@ -261,7 +261,7 @@ public final class ObjectRegistry {
         CLASS_TO_OBJECT.put(objClass, new ModType<T>() {
             final ConstructorMethod<T> c = getConstrFromClass(objClass);
             final MatcherMethod m = getMatcherFromClass(objClass);
-            final ModifierHandler<T> mH = getModHandFromClass(objClass);
+            final Modifier.Handler<T> mH = getModHandFromClass(objClass);
 
             @Override
             public ConstructorMethod<T> con() {
@@ -274,7 +274,7 @@ public final class ObjectRegistry {
             }
 
             @Override
-            public ModifierHandler<T> mH() {
+            public Modifier.Handler<T> mH() {
                 return mH;
             }
         });
@@ -295,8 +295,8 @@ public final class ObjectRegistry {
         CLASS_TO_OBJECT.put(objClass, new AttrModType<T>() {
             final ConstructorMethod<T> c = getConstrFromClass(objClass);
             final MatcherMethod m = getMatcherFromClass(objClass);
-            final AttributeHandler<T> aH = getAttrHandFromClass(objClass);
-            final ModifierHandler<T> mH = getModHandFromClass(objClass);
+            final Attribute.Handler<T> aH = getAttrHandFromClass(objClass);
+            final Modifier.Handler<T> mH = getModHandFromClass(objClass);
 
             @Override
             public ConstructorMethod<T> con() {
@@ -309,12 +309,12 @@ public final class ObjectRegistry {
             }
 
             @Override
-            public AttributeHandler<T> aH() {
+            public Attribute.Handler<T> aH() {
                 return aH;
             }
 
             @Override
-            public ModifierHandler<T> mH() {
+            public Modifier.Handler<T> mH() {
                 return mH;
             }
         });
