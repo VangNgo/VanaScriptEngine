@@ -12,6 +12,15 @@ public final class StringUtils {
     public final static Pattern SINGLE_QUOTED_PATTERN = Pattern.compile("^'[^']+'$");
     public final static Pattern ESCAPED_CHARACTER_PATTERN = Pattern.compile("\\\\(?:\\\\\\\\)*[^\\\\]");
 
+    public static Integer toInt(String str) {
+        try {
+            return Integer.parseInt(str);
+        }
+        catch (NumberFormatException nfe) {
+            return null;
+        }
+    }
+
     public static String enforceValidName(String str) {
         if (str == null || str.isEmpty()) {
             throw new IllegalArgumentException("Cannot have a null or empty string as a name!");

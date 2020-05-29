@@ -21,29 +21,55 @@ public class Attribute implements Cloneable {
 
     public static class Component {
         private final String name, context;
+        private final Map<String, String> mappedContext;
+        private Map<String, Map<Class<? extends AbstractObject>, AbstractObject>> mappedContextObjCache;
         private Map<Class<? extends AbstractObject>, AbstractObject> contextObjCache;
 
-        public Component(String name, String context) {
+        public Component(String name, String context, Map<String, String> mappedContext) {
             if (StringUtils.emptyAsNull(name) == null) {
                 throw new IllegalArgumentException("Cannot have a nameless attribute!");
             }
             this.name = name;
             this.context = context;
+            this.mappedContext = mappedContext;
         }
 
         public String getName() {
             return name;
         }
 
-        public String getContext() {
+        public String getRawContext() {
             return context;
         }
 
-        public AbstractObject getContextAsType(Class<? extends AbstractObject> toClass) {
+        public Map<String, String> getContext() {
+            return mappedContext;
+        }
+
+        @SuppressWarnings("unchecked")
+        public <T extends AbstractObject> T getContextAsType(String key, Class<T> toClass) {
+            if (!mappedContext.containsKey(key)) {
+                return null;
+            }
+            if (mappedContextObjCache == null) {
+                mappedContextObjCache = new HashMap<>(); // Only initialize the object cache if this method is called
+            }
+            Map<Class<? extends AbstractObject>, AbstractObject> map = mappedContextObjCache.computeIfAbsent(key, k -> new HashMap<>());
+            if (!map.containsKey(toClass)) {
+                // TODO: This
+            }
+            return (T) map.get(toClass);
+        }
+
+        @SuppressWarnings("unchecked")
+        public <T extends AbstractObject> T getRawContextAsType(Class<T> toClass) {
+            if (contextObjCache == null) {
+                contextObjCache = new HashMap<>(); // Only initialize the object cache if this method is called
+            }
             if (!contextObjCache.containsKey(toClass)) {
                 // TODO: This
             }
-            return contextObjCache.get(toClass);
+            return (T) contextObjCache.get(toClass);
         }
 
         @Override
@@ -75,6 +101,11 @@ public class Attribute implements Cloneable {
             char c = str.charAt(i);
 
             switch (c) {
+                case '\\':
+                    if (!quoted && parens == 0) {
+                        throwIllegalArgumentForSyntax(str, i, "Illegal escape character found.");
+                    }
+                    break;
                 case '<':
                 case '>':
                     if (!quoted && parens == 0) {
@@ -149,6 +180,7 @@ public class Attribute implements Cloneable {
                     if (quoted || parens > 0) {
                         continue;
                     }
+                    hadContext = false;
                     // TODO: This
                     break;
             }
@@ -229,28 +261,64 @@ public class Attribute implements Cloneable {
         return getComponent(offset, ignoreFulfilled).context != null;
     }
 
-    public String getContext() {
-        return getContext(0, false);
+    public Map<String, String> getContextMap() {
+        return getContextMap(0, false);
     }
 
-    public String getContext(int offset) {
-        return getContext(offset, false);
+    public Map<String, String> getContextMap(int offset) {
+        return getContextMap(offset, false);
     }
 
-    public String getContext(int offset, boolean ignoreFulfilled) {
+    public Map<String, String> getContextMap(int offset, boolean ignoreFulfilled) {
+        return getComponent(offset, ignoreFulfilled).mappedContext;
+    }
+
+    public String getContext(String key) {
+        return getContext(key, 0, false);
+    }
+
+    public String getContext(String key, int offset) {
+        return getContext(key, offset, false);
+    }
+
+    public String getContext(String key, int offset, boolean ignoreFulfilled) {
+        return getComponent(offset, ignoreFulfilled).mappedContext.get(key);
+    }
+
+    public AbstractObject getContextAsType(String key, Class<? extends AbstractObject> toType) {
+        return getContextAsType(key, toType, 0, false);
+    }
+
+    public AbstractObject getContextAsType(String key, Class<? extends AbstractObject> toType, int offset) {
+        return getContextAsType(key, toType, offset, false);
+    }
+
+    public AbstractObject getContextAsType(String key, Class<? extends AbstractObject> toType, int offset, boolean ignoreFulfilled) {
+        return getComponent(offset, ignoreFulfilled).getContextAsType(key, toType);
+    }
+
+    public String getRawContext() {
+        return getRawContext(0, false);
+    }
+
+    public String getRawContext(int offset) {
+        return getRawContext(offset, false);
+    }
+
+    public String getRawContext(int offset, boolean ignoreFulfilled) {
         return getComponent(offset, ignoreFulfilled).context;
     }
 
-    public AbstractObject getContextAsType(Class<? extends AbstractObject> typeClass) {
-        return getContextAsType(typeClass, 0, false);
+    public AbstractObject getRawContextAsType(Class<? extends AbstractObject> toType) {
+        return getRawContextAsType(toType, 0, false);
     }
 
-    public AbstractObject getContextAsType(Class<? extends AbstractObject> typeClass, int offset) {
-        return getContextAsType(typeClass, offset, false);
+    public AbstractObject getRawContextAsType(Class<? extends AbstractObject> toType, int offset) {
+        return getRawContextAsType(toType, offset, false);
     }
 
-    public AbstractObject getContextAsType(Class<? extends AbstractObject> typeClass, int offset, boolean ignoreFulfilled) {
-        return getComponent(offset, ignoreFulfilled).getContextAsType(typeClass);
+    public AbstractObject getRawContextAsType(Class<? extends AbstractObject> toType, int offset, boolean ignoreFulfilled) {
+        return getComponent(offset, ignoreFulfilled).getRawContextAsType(toType);
     }
 
     public boolean startsWith(String... vals) {

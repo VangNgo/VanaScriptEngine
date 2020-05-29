@@ -12,7 +12,10 @@ import net.vanabel.vanascriptengine.util.conversion.StringUtils;
 
 import java.util.Map;
 
-public abstract class EncapsulatedObject extends AbstractObject implements Attributable {
+/**
+ * Represents an encapsulated object type. All objects of this type are cloneable.
+ */
+public abstract class EncapsulatedObject extends AbstractObject implements Attributable, Cloneable {
 
     public static class EncapsulatedAttributeHandler<T extends EncapsulatedObject> extends AttributeHandler<T> {
         // TODO: Universal attributes?
@@ -65,9 +68,6 @@ public abstract class EncapsulatedObject extends AbstractObject implements Attri
                 // TODO: Debug or exception?
                 return false;
             }
-            if (modifier.isFulfilled()) {
-                return true;
-            }
 
             String mName = modifier.getName();
             Modifier.Processor<T> processor = getProcessorForModifier(mName);
@@ -88,5 +88,15 @@ public abstract class EncapsulatedObject extends AbstractObject implements Attri
     public Map<String, AbstractObject> getCustomData() {
         throw new IllegalStateException(StringUtils.capitalize(getObjectTypeNamePlural()) + " do not support" +
                 "custom data!");
+    }
+
+    @Override
+    public EncapsulatedObject clone() {
+        try {
+            return (EncapsulatedObject) super.clone();
+        }
+        catch (CloneNotSupportedException cnse) {
+            return null;
+        }
     }
 }

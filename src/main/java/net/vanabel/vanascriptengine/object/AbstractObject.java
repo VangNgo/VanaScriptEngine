@@ -25,10 +25,4 @@ public abstract class AbstractObject implements Cloneable {
      */
     @Override
     public abstract String toString();
-
-    /**
-     * Returns a clone of this object.
-     * @return A clone of this object.
-     */
-    public abstract AbstractObject clone();
 }
