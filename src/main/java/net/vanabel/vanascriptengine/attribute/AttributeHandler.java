@@ -5,7 +5,6 @@ import net.vanabel.vanascriptengine.util.conversion.StringUtils;
 import net.vanabel.vanascriptengine.util.validator.ObjectValidator;
 
 import java.util.HashMap;
-import java.util.HashSet;
 import java.util.Map;
 import java.util.Set;
 
@@ -20,7 +19,7 @@ public abstract class AttributeHandler<T extends Attributable> {
     }
 
     public void registerAttributes(Attribute.Processor<T> processor, String... names) {
-        ObjectValidator.objectIsNonNull(processor, "A processor must be provided!");
+        ObjectValidator.objectIsNonNull(processor, "An attribute processor must be provided!");
         names = StringUtils.enforceValidNames(names);
         checkForNames(names);
 
@@ -34,7 +33,7 @@ public abstract class AttributeHandler<T extends Attributable> {
     }
 
     public void extendAttributes(Attribute.Processor<T> newProcessor, String... names) {
-        ObjectValidator.objectIsNonNull(newProcessor, "A processor must be provided!");
+        ObjectValidator.objectIsNonNull(newProcessor, "An attribute processor must be provided!");
         names = StringUtils.enforceValidNames(names);
         checkForNames(names);
 
