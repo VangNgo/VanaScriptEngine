@@ -3,6 +3,9 @@ package net.vanabel.vanascriptengine.object.encapsulated;
 import net.vanabel.vanascriptengine.attribute.Attributable;
 import net.vanabel.vanascriptengine.attribute.Attribute;
 import net.vanabel.vanascriptengine.attribute.AttributeHandler;
+import net.vanabel.vanascriptengine.modifier.Modifiable;
+import net.vanabel.vanascriptengine.modifier.Modifier;
+import net.vanabel.vanascriptengine.modifier.ModifierHandler;
 import net.vanabel.vanascriptengine.object.AbstractObject;
 import net.vanabel.vanascriptengine.object.Downgradeable;
 import net.vanabel.vanascriptengine.util.conversion.StringUtils;
@@ -51,6 +54,30 @@ public abstract class EncapsulatedObject extends AbstractObject implements Attri
                 }
             }
             return null;
+        }
+    }
+
+    public static class EncapsulatedModifierHandler<T extends EncapsulatedObject & Modifiable> extends ModifierHandler<T> {
+
+        @Override
+        public boolean processModifier(T object, Modifier modifier) {
+            if (object == null || modifier == null) {
+                // TODO: Debug or exception?
+                return false;
+            }
+            if (modifier.isFulfilled()) {
+                return true;
+            }
+
+            String mName = modifier.getName();
+            Modifier.Processor<T> processor = getProcessorForModifier(mName);
+
+            boolean isProcessed = processor.process(object, modifier);
+
+            if (!isProcessed) {
+                // TODO: Debug
+            }
+            return isProcessed;
         }
     }
 
