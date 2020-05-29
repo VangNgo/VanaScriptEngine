@@ -12,7 +12,6 @@ public class Modifier {
     private final String name;
     private final String unprocessedValue;
     // TODO: Context
-    private boolean fulfilled = false;
 
     public Modifier(String name, String value) {
         this.name = name;
@@ -29,13 +28,5 @@ public class Modifier {
 
     public String getUnprocessedValue() {
         return unprocessedValue;
-    }
-
-    public boolean isFulfilled() {
-        return fulfilled;
-    }
-
-    public void setAsFulfilled() {
-        fulfilled = true;
     }
 }
