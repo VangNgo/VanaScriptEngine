@@ -43,10 +43,8 @@ public abstract class ModifierHandler<T extends Modifiable> {
                 continue;
             }
             modifiers.replace(name, (object, modifier) -> {
-                processor.process(object, modifier);
-                if (!modifier.isFulfilled()) {
-                    oldP.process(object, modifier);
-                }
+                boolean isProcessed = processor.process(object, modifier);
+                return isProcessed || oldP.process(object, modifier);
             });
         }
     }
@@ -63,5 +61,5 @@ public abstract class ModifierHandler<T extends Modifiable> {
         return modifiers.get(name);
     }
 
-    public abstract void processModifier(T object, Modifier modifier);
+    public abstract boolean processModifier(T object, Modifier modifier);
 }

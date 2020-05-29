@@ -6,7 +6,7 @@ public class Modifier {
 
     @FunctionalInterface
     public interface Processor<T extends Modifiable> {
-        void process(T object, Modifier modifier);
+        boolean process(T object, Modifier modifier);
     }
 
     private final String name;
