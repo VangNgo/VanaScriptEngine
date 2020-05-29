@@ -6,13 +6,51 @@ import java.util.regex.Pattern;
 
 public final class StringUtils {
 
-    private final static Pattern INVALID_NAME_CHARS = Pattern.compile(".+[\"'()=;]+.+");
+    public final static Pattern INTEGER_PATTERN = Pattern.compile("^[+\\-]?[0-9]+$");
+    public final static Pattern BINARY_PATTERN = Pattern.compile("^0[bB][01]+$");
+    public final static Pattern HEXADECIMAL_PATTERN = Pattern.compile("^0[x|X][0-9a-fA-F]+$");
+    public final static Pattern DECIMAL_PATTERN = Pattern.compile("^[+\\-]?[0-9]+(?:\\.[0-9]+)?(?:[+\\-]?[eE][0-9]+)?$");
+
+    public final static Pattern INVALID_NAME_CHARS = Pattern.compile(".+[\"'()=;]+.+");
 
     public final static Pattern DOUBLE_QUOTED_PATTERN = Pattern.compile("^\"[^\"]+\"$");
     public final static Pattern SINGLE_QUOTED_PATTERN = Pattern.compile("^'[^']+'$");
     public final static Pattern ESCAPED_CHARACTER_PATTERN = Pattern.compile("\\\\(?:\\\\\\\\)*[^\\\\]");
 
-    public static Integer toInt(String str) {
+    public static boolean matchesDecimalPattern(String str) {
+        return DECIMAL_PATTERN.matcher(str).matches();
+    }
+
+    public static boolean isDouble(String str) {
+        return toDouble(str) != null;
+    }
+
+    public static Double toDouble(String str) {
+        try {
+            return Double.parseDouble(str);
+        }
+        catch (NumberFormatException nfe) {
+            return null;
+        }
+    }
+
+    public static boolean matchesIntegerPattern(String str) {
+        return INTEGER_PATTERN.matcher(str).matches();
+    }
+
+    public static boolean matchesBinaryPattern(String str) {
+        return BINARY_PATTERN.matcher(str).matches();
+    }
+
+    public static boolean matchesHexadecimalPattern(String str) {
+        return HEXADECIMAL_PATTERN.matcher(str).matches();
+    }
+
+    public static boolean isInteger(String str) {
+        return toInteger(str) != null;
+    }
+
+    public static Integer toInteger(String str) {
         try {
             return Integer.parseInt(str);
         }
