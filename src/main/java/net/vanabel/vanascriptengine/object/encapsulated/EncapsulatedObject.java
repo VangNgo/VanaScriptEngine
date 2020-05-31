@@ -6,9 +6,8 @@ import net.vanabel.vanascriptengine.modifier.Modifiable;
 import net.vanabel.vanascriptengine.modifier.Modifier;
 import net.vanabel.vanascriptengine.object.AbstractObject;
 import net.vanabel.vanascriptengine.object.Downgradeable;
-import net.vanabel.vanascriptengine.util.conversion.StringUtils;
-
-import java.util.Map;
+import net.vanabel.vanascriptengine.object.ObjectRegistry;
+import net.vanabel.vanascriptengine.object.datatype.BooleanDataType;
 
 /**
  * Represents an encapsulated object type. All objects of this type are cloneable.
@@ -16,7 +15,66 @@ import java.util.Map;
 public abstract class EncapsulatedObject extends AbstractObject implements Attributable, Cloneable {
 
     public static class AttributeHandler<T extends EncapsulatedObject> extends Attribute.Handler<T> {
-        // TODO: Universal attributes?
+
+        public AttributeHandler() {
+            ////////////////////////////////////////////////////////////////////
+            // Universal attributes shared across all objects
+            registerAttributes(
+                    (Attribute.DirectProcessor<T>) (object, attribute) -> new TextObject(object.getObjectTypeName()),
+                    "object_type", "objectType"
+            );
+            registerAttributes(
+                    (Attribute.DirectProcessor<T>) (object, attribute) -> object.clone(),
+                    "clone"
+            );
+            registerAttributes(
+                    (Attribute.DirectProcessor<T>) (object, attribute) -> {
+                        SetObject<TextObject> names = new SetObject<>();
+                        for (String a : getAttributes()) {
+                            names.add(new TextObject(a));
+                        }
+                        return names;
+                    },
+                    "valid_attributes", "validAttributes"
+            );
+
+            ////////////////////////////////////////////////////////////////////
+            // Downgrade (equivalent to casting upwards in Java)
+            registerAttributes(
+                    (Attribute.DirectProcessor<T>) (object, attribute) -> new BooleanDataType(object instanceof Downgradeable),
+                    "downgradeable"
+            );
+            registerAttributes(
+                    (Attribute.DirectProcessor<T>) (object, attribute) -> {
+                        if (object instanceof Downgradeable) {
+                            return ((Downgradeable) object).downgrade();
+                        }
+                        return null;
+                    },
+                    "downgrade"
+            );
+
+            ////////////////////////////////////////////////////////////////////
+            // Modifiable
+            registerAttributes(
+                    (Attribute.DirectProcessor<T>) (object, attribute) -> new BooleanDataType(object instanceof Modifiable),
+                    "modifiable"
+            );
+            registerAttributes(
+                    (Attribute.DirectProcessor<T>) (object, attribute) -> {
+                        SetObject<TextObject> names = new SetObject<>();
+                        Modifier.Handler<?> modHand = ObjectRegistry.getModifierHandlerFor(object.getClass());
+                        if (modHand != null) {
+                            for (String m : modHand.getModifiers()) {
+                                names.add(new TextObject(m));
+                            }
+                            return names;
+                        }
+                        return null;
+                    },
+                    "valid_modifiers", "validModifiers"
+            );
+        }
 
         @Override
         @SuppressWarnings("unchecked")
@@ -33,7 +91,7 @@ public abstract class EncapsulatedObject extends AbstractObject implements Attri
             int previousFulfilled = attribute.getFulfilledCount();
             String aName = attribute.getName();
             AbstractObject result = null;
-            Attribute.Processor<T> processor = getProcessorForAttribute(aName);
+            Attribute.Processor<T> processor = getProcessorFor(aName);
 
             if (processor != null) {
                 if (!(processor instanceof Attribute.DirectProcessor)) {
@@ -82,11 +140,6 @@ public abstract class EncapsulatedObject extends AbstractObject implements Attri
     public abstract String getObjectTypeName();
 
     public abstract String getObjectTypeNamePlural();
-
-    public Map<String, AbstractObject> getCustomData() {
-        throw new IllegalStateException(StringUtils.capitalize(getObjectTypeNamePlural()) + " do not support" +
-                "custom data!");
-    }
 
     @Override
     public EncapsulatedObject clone() {

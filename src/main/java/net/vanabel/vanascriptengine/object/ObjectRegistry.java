@@ -147,6 +147,11 @@ public final class ObjectRegistry {
         if (objClass == null) {
             return false;
         }
+        ObjType<?> objType = CLASS_TO_OBJECT.get(objClass);
+        if (objType != null) {
+            // TODO: Debug invalid state for data types, data types are neither attributable nor modifiable
+            return false;
+        }
         return CLASS_TO_OBJECT.putIfAbsent(objClass, new DataObjType<T>() {
             final ConstructorMethod<T> c = getConstrFromClass(objClass);
             final MatcherMethod m = getMatcherFromClass(objClass);
@@ -178,6 +183,9 @@ public final class ObjectRegistry {
             else if (objType instanceof AttrType) {
                 // TODO: Debug stronger declaration
             }
+            else if (objType instanceof DataObjType) {
+                // TODO: Debug invalid conversion
+            }
             // TODO: Debug?
             return false;
         }
@@ -208,11 +216,14 @@ public final class ObjectRegistry {
                 // TODO: Debug stronger declaration
                 return false;
             }
-            if (objType instanceof ModType) {
+            else if (objType instanceof ModType) {
                 // TODO: Debug, recommend registerAttributableModifiableObject(Class<?>)
+            }
+            else if (objType instanceof AttrType) {
                 return false;
             }
-            if (objType instanceof AttrType) {
+            else if (objType instanceof DataObjType) {
+                // TODO: Debug invalid conversion
                 return false;
             }
             // TODO: Debug?
@@ -250,10 +261,14 @@ public final class ObjectRegistry {
                 // TODO: Debug stronger declaration
                 return false;
             }
-            if (objType instanceof AttrType) {
+            else if (objType instanceof AttrType) {
                 // TODO: Debug, recommend registerAttributableModifiableObject(Class<?>)
             }
-            if (objType instanceof ModType) {
+            else if (objType instanceof ModType) {
+                return false;
+            }
+            else if (objType instanceof DataObjType) {
+                // TODO: Debug invalid conversion
                 return false;
             }
             // TODO: Debug?
@@ -290,6 +305,10 @@ public final class ObjectRegistry {
             if (objType instanceof AttrModType) {
                 return false;
             }
+            else if (objType instanceof DataObjType) {
+                // TODO: Debug invalid conversion
+                return false;
+            }
             // TODO: Debug, overriding weaker declarations
         }
         CLASS_TO_OBJECT.put(objClass, new AttrModType<T>() {
@@ -319,5 +338,11 @@ public final class ObjectRegistry {
             }
         });
         return true;
+    }
+
+    @SuppressWarnings("unchecked")
+    public static <T extends AbstractObject> Modifier.Handler<?> getModifierHandlerFor(Class<T> objClass) {
+        ObjType<T> objType = (ObjType<T>) CLASS_TO_OBJECT.get(objClass);
+        return objType instanceof ModType ? ((ModType<?>) objType).mH() : null;
     }
 }

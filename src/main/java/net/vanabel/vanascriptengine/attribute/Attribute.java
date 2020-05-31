@@ -82,7 +82,7 @@ public class Attribute implements Cloneable {
             return attributes.keySet();
         }
 
-        public Processor<T> getProcessorForAttribute(String name) {
+        public Processor<T> getProcessorFor(String name) {
             return attributes.get(name);
         }
 
