@@ -341,6 +341,12 @@ public final class ObjectRegistry {
     }
 
     @SuppressWarnings("unchecked")
+    public static <T extends AbstractObject> Attribute.Handler<?> getAttributeHandlerFor(Class<T> objClass) {
+        ObjType<T> objType = (ObjType<T>) CLASS_TO_OBJECT.get(objClass);
+        return objType instanceof AttrType ? ((AttrType<?>) objType).aH() : null;
+    }
+
+    @SuppressWarnings("unchecked")
     public static <T extends AbstractObject> Modifier.Handler<?> getModifierHandlerFor(Class<T> objClass) {
         ObjType<T> objType = (ObjType<T>) CLASS_TO_OBJECT.get(objClass);
         return objType instanceof ModType ? ((ModType<?>) objType).mH() : null;
