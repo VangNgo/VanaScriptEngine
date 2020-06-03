@@ -51,12 +51,14 @@ public final class ObjectRegistry {
     private final static String ATTRIBUTE_HANDLER_FIELD_NAME = "ATTRIBUTE_HANDLER";
     private final static String MODIFIER_HANDLER_FIELD_NAME = "MODIFIER_HANDLER";
 
-    private static MatcherMethod getMatcherFromClass(Class<? extends AbstractObject> objClass) {
+    private static MatcherMethod getMatcherFromClass(Class<? extends AbstractObject> objClass)
+            throws IllegalStateException{
         Method m = null;
         try {
             Method[] mArray = ReflectionHelper.getStaticMethodsForAnnotation(objClass, ObjectMatcher.class);
-            if (mArray.length == 0) {
-                return null;
+            if (mArray.length != 1) {
+                throw new IllegalStateException("All AbstractObject implementations must have only one static " +
+                        "method with the ObjectMatcher annotation!");
             }
 
             m = mArray[0];
@@ -75,7 +77,7 @@ public final class ObjectRegistry {
             return (MatcherMethod) site.getTarget().invoke();
         }
         catch (Throwable t) {
-            return null;
+            throw new IllegalStateException("Could not fetch a matcher method from " + objClass.getName() + "!");
         }
         finally {
             if (m != null) {
@@ -85,12 +87,14 @@ public final class ObjectRegistry {
     }
 
     @SuppressWarnings("unchecked")
-    private static <T extends AbstractObject> ConstructorMethod<T> getConstrFromClass(Class<T> objClass) {
+    private static <T extends AbstractObject> ConstructorMethod<T> getConstrFromClass(Class<T> objClass)
+            throws IllegalStateException {
         Method m = null;
         try {
             Method[] mArray = ReflectionHelper.getStaticMethodsForAnnotation(objClass, ObjectConstructor.class);
-            if (mArray.length == 0) {
-                return null;
+            if (mArray.length != 1) {
+                throw new IllegalStateException("All AbstractObject implementations must have only one static " +
+                        "method with the ObjectConstructor annotation!");
             }
 
             m = mArray[0];
@@ -109,7 +113,7 @@ public final class ObjectRegistry {
             return (ConstructorMethod<T>) site.getTarget().invoke();
         }
         catch (Throwable t) {
-            return null;
+            throw new IllegalStateException("Could not fetch a construction method from " + objClass.getName() + "!");
         }
         finally {
             if (m != null) {
@@ -119,7 +123,8 @@ public final class ObjectRegistry {
     }
 
     @SuppressWarnings("unchecked")
-    private static <T extends AbstractObject & Attributable> Attribute.Handler<T> getAttrHandFromClass(Class<T> objClass) {
+    private static <T extends AbstractObject & Attributable> Attribute.Handler<T> getAttrHandFromClass(Class<T> objClass)
+            throws IllegalStateException {
         try {
             return (Attribute.Handler<T>) objClass.getDeclaredField(ATTRIBUTE_HANDLER_FIELD_NAME).get(null);
         }
@@ -130,7 +135,8 @@ public final class ObjectRegistry {
     }
 
     @SuppressWarnings("unchecked")
-    private static <T extends AbstractObject & Modifiable> Modifier.Handler<T> getModHandFromClass(Class<T> objClass) {
+    private static <T extends AbstractObject & Modifiable> Modifier.Handler<T> getModHandFromClass(Class<T> objClass)
+            throws IllegalStateException {
         try {
             return (Modifier.Handler<T>) objClass.getDeclaredField(MODIFIER_HANDLER_FIELD_NAME).get(null);
         }
@@ -148,15 +154,17 @@ public final class ObjectRegistry {
         if (objClass == null) {
             return false;
         }
-        ObjType<?> objType = CLASS_TO_OBJECT.get(objClass);
-        if (objType != null) {
-            // TODO: Debug invalid state for data types, data types are neither attributable nor modifiable
+        ConstructorMethod<T> c;
+        MatcherMethod m;
+        try {
+            c = getConstrFromClass(objClass);
+            m = getMatcherFromClass(objClass);
+        }
+        catch (Exception e) {
+            // TODO: Debug
             return false;
         }
         return CLASS_TO_OBJECT.putIfAbsent(objClass, new DataObjType<T>() {
-            final ConstructorMethod<T> c = getConstrFromClass(objClass);
-            final MatcherMethod m = getMatcherFromClass(objClass);
-
             @Override
             public ConstructorMethod<T> con() {
                 return c;
@@ -190,10 +198,17 @@ public final class ObjectRegistry {
             // TODO: Debug?
             return false;
         }
+        ConstructorMethod<T> c;
+        MatcherMethod m;
+        try {
+            c = getConstrFromClass(objClass);
+            m = getMatcherFromClass(objClass);
+        }
+        catch (Exception e) {
+            // TODO: Debug
+            return false;
+        }
         CLASS_TO_OBJECT.put(objClass, new ObjType<T>() {
-            final ConstructorMethod<T> c = getConstrFromClass(objClass);
-            final MatcherMethod m = getMatcherFromClass(objClass);
-
             @Override
             public ConstructorMethod<T> con() {
                 return c;
@@ -229,11 +244,19 @@ public final class ObjectRegistry {
             }
             // TODO: Debug?
         }
+        ConstructorMethod<T> c;
+        MatcherMethod m;
+        Attribute.Handler<T> aH;
+        try {
+            c = getConstrFromClass(objClass);
+            m = getMatcherFromClass(objClass);
+            aH = getAttrHandFromClass(objClass);
+        }
+        catch (Exception e) {
+            // TODO: Debug
+            return false;
+        }
         CLASS_TO_OBJECT.put(objClass, new AttrType<T>() {
-            final ConstructorMethod<T> c = getConstrFromClass(objClass);
-            final MatcherMethod m = getMatcherFromClass(objClass);
-            final Attribute.Handler<T> aH = getAttrHandFromClass(objClass);
-
             @Override
             public ConstructorMethod<T> con() {
                 return c;
@@ -274,11 +297,19 @@ public final class ObjectRegistry {
             }
             // TODO: Debug?
         }
+        ConstructorMethod<T> c;
+        MatcherMethod m;
+        Modifier.Handler<T> mH;
+        try {
+            c = getConstrFromClass(objClass);
+            m = getMatcherFromClass(objClass);
+            mH = getModHandFromClass(objClass);
+        }
+        catch (Exception e) {
+            // TODO: Debug
+            return false;
+        }
         CLASS_TO_OBJECT.put(objClass, new ModType<T>() {
-            final ConstructorMethod<T> c = getConstrFromClass(objClass);
-            final MatcherMethod m = getMatcherFromClass(objClass);
-            final Modifier.Handler<T> mH = getModHandFromClass(objClass);
-
             @Override
             public ConstructorMethod<T> con() {
                 return c;
@@ -312,12 +343,21 @@ public final class ObjectRegistry {
             }
             // TODO: Debug, overriding weaker declarations
         }
+        ConstructorMethod<T> c;
+        MatcherMethod m;
+        Attribute.Handler<T> aH;
+        Modifier.Handler<T> mH;
+        try {
+            c = getConstrFromClass(objClass);
+            m = getMatcherFromClass(objClass);
+            aH = getAttrHandFromClass(objClass);
+            mH = getModHandFromClass(objClass);
+        }
+        catch (Exception e) {
+            // TODO: Debug
+            return false;
+        }
         CLASS_TO_OBJECT.put(objClass, new AttrModType<T>() {
-            final ConstructorMethod<T> c = getConstrFromClass(objClass);
-            final MatcherMethod m = getMatcherFromClass(objClass);
-            final Attribute.Handler<T> aH = getAttrHandFromClass(objClass);
-            final Modifier.Handler<T> mH = getModHandFromClass(objClass);
-
             @Override
             public ConstructorMethod<T> con() {
                 return c;
