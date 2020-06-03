@@ -33,11 +33,11 @@ public class TextObject extends EncapsulatedObject {
                             // TODO: Debug
                             return null;
                         }
-                        Integer start = StringUtils.toInteger(attribute.getRawContext());
+                        Integer start = StringUtils.toInteger(attribute.getContext().getRaw());
                         Integer end = object.value.length();
-                        if (attribute.getContextMap() != null) {
-                            start = StringUtils.toInteger(attribute.getContext("start"));
-                            end = StringUtils.toInteger(attribute.getContext("end"));
+                        if (attribute.getContext().isMap()) {
+                            start = StringUtils.toInteger(attribute.getContext().getKeyValue("start"));
+                            end = StringUtils.toInteger(attribute.getContext().getKeyValue("end"));
                         }
                         if (start == null || end == null) {
                             // TODO: Debug
