@@ -22,7 +22,7 @@ public class NumberDataType extends DataTypeObject {
         long time = System.currentTimeMillis();
         for (String key : CONSTRUCT_CACHE.keySet()) {
             DuoNode<Long, NumberDataType> node = CONSTRUCT_CACHE.get(key);
-            if (time - node.getLeft() > delay * 1000) {
+            if (time - node.getLeft() > delay) {
                 CONSTRUCT_CACHE.remove(key);
             }
         }
