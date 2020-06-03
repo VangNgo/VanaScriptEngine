@@ -351,4 +351,13 @@ public final class ObjectRegistry {
         ObjType<T> objType = (ObjType<T>) CLASS_TO_OBJECT.get(objClass);
         return objType instanceof ModType ? ((ModType<?>) objType).mH() : null;
     }
+
+    @SuppressWarnings("unchecked")
+    public static <T extends AbstractObject> T constructForClass(String value, Class<T> objClass) {
+        ObjType<T> objType = (ObjType<T>) CLASS_TO_OBJECT.get(objClass);
+        if (objType == null) {
+            return null;
+        }
+        return objType.con().construct(value);
+    }
 }
