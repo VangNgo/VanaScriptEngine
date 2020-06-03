@@ -11,7 +11,7 @@ public final class ReflectionHelper {
 
     private final static Map<Class<?>, Map<Class<? extends Annotation>, Set<Method>>> ANNOTATED_METHOD_CACHE = new HashMap<>();
 
-    public final static Method[] getMethodsForAnnotation(Class<?> clss, Class<? extends Annotation> aClss) {
+    public static Method[] getMethodsForAnnotation(Class<?> clss, Class<? extends Annotation> aClss) {
         if (clss == null || aClss == null) {
             return null;
         }
