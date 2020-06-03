@@ -1,8 +1,13 @@
 package net.vanabel.vanascriptengine.object.datatype;
 
+import net.vanabel.vanascriptengine.object.annotation.ObjectCacheClearer;
 import net.vanabel.vanascriptengine.object.annotation.ObjectConstructor;
 import net.vanabel.vanascriptengine.object.annotation.ObjectMatcher;
+import net.vanabel.vanascriptengine.util.DuoNode;
 import net.vanabel.vanascriptengine.util.conversion.StringUtils;
+
+import java.util.HashMap;
+import java.util.Map;
 
 /**
  * Represents a general numeric data type. Encompasses both decimals and integers.
@@ -10,12 +15,30 @@ import net.vanabel.vanascriptengine.util.conversion.StringUtils;
  */
 public class NumberDataType extends DataTypeObject {
 
+    private final static Map<String, DuoNode<Long, NumberDataType>> CONSTRUCT_CACHE = new HashMap<>();
+
+    @ObjectCacheClearer( customCheckDelay = 1000 )
+    public static void clearCache(long delay) {
+        long time = System.currentTimeMillis();
+        for (String key : CONSTRUCT_CACHE.keySet()) {
+            DuoNode<Long, NumberDataType> node = CONSTRUCT_CACHE.get(key);
+            if (time - node.getLeft() > delay * 1000) {
+                CONSTRUCT_CACHE.remove(key);
+            }
+        }
+    }
+
     @ObjectConstructor
     public static NumberDataType construct(String val) {
         if (val == null || !matches(val)) {
             return null;
         }
-        return new NumberDataType(val);
+        long time = System.currentTimeMillis();
+        DuoNode<Long, NumberDataType> node = CONSTRUCT_CACHE.computeIfAbsent(val, k -> new DuoNode<>(time, new NumberDataType(val)));
+        if (node.getLeft() != time) {
+            node.setLeft(time);
+        }
+        return node.getRight();
     }
 
     @ObjectMatcher

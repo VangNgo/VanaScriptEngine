@@ -1,14 +1,32 @@
 package net.vanabel.vanascriptengine.object.datatype;
 
+import net.vanabel.vanascriptengine.object.annotation.ObjectCacheClearer;
 import net.vanabel.vanascriptengine.object.annotation.ObjectConstructor;
 import net.vanabel.vanascriptengine.object.annotation.ObjectMatcher;
+import net.vanabel.vanascriptengine.util.DuoNode;
 import net.vanabel.vanascriptengine.util.conversion.StringUtils;
+
+import java.util.HashMap;
+import java.util.Map;
 
 /**
  * Represents a general integer data type.
  * This object's numerical range is bounded by Java's long primitive data type.
  */
 public class IntegerDataType extends DataTypeObject {
+
+    private final static Map<String, DuoNode<Long, IntegerDataType>> CONSTRUCT_CACHE = new HashMap<>();
+
+    @ObjectCacheClearer( customCheckDelay = 1000 )
+    public static void clearCache(long delay) {
+        long time = System.currentTimeMillis();
+        for (String key : CONSTRUCT_CACHE.keySet()) {
+            DuoNode<Long, IntegerDataType> node = CONSTRUCT_CACHE.get(key);
+            if (time - node.getLeft() > delay * 1000) {
+                CONSTRUCT_CACHE.remove(key);
+            }
+        }
+    }
 
     /**
      * Constructs an IntegerObject from a String. Accepts binary and hexadecimal inputs, as long as
@@ -21,13 +39,23 @@ public class IntegerDataType extends DataTypeObject {
         if (val == null || !matches(val)) {
             return null;
         }
-        if (StringUtils.matchesBinaryPattern(val)) {
-            return new IntegerDataType(Long.parseLong(val.substring(2), 2));
+        long time = System.currentTimeMillis();
+        DuoNode<Long, IntegerDataType> node = CONSTRUCT_CACHE.computeIfAbsent(val, k -> new DuoNode<>(time, null));
+        if (node.getLeft() != time) {
+            node.setLeft(time);
         }
-        if (StringUtils.matchesHexadecimalPattern(val)) {
-            return new IntegerDataType(Long.parseLong(val.substring(2), 16));
+        if (node.getRight() == null) {
+            if (StringUtils.matchesBinaryPattern(val)) {
+                node.setRight(new IntegerDataType(Long.parseLong(val.substring(2), 2)));
+            }
+            else if (StringUtils.matchesHexadecimalPattern(val)) {
+                node.setRight(new IntegerDataType(Long.parseLong(val.substring(2), 16)));
+            }
+            else {
+                node.setRight(new IntegerDataType(val));
+            }
         }
-        return new IntegerDataType(val);
+        return node.getRight();
     }
 
     @ObjectMatcher

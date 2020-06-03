@@ -1,16 +1,39 @@
 package net.vanabel.vanascriptengine.object.datatype;
 
+import net.vanabel.vanascriptengine.object.annotation.ObjectCacheClearer;
 import net.vanabel.vanascriptengine.object.annotation.ObjectConstructor;
 import net.vanabel.vanascriptengine.object.annotation.ObjectMatcher;
+import net.vanabel.vanascriptengine.util.DuoNode;
+
+import java.util.HashMap;
+import java.util.Map;
 
 public class CharDataType extends DataTypeObject {
+
+    private final static Map<String, DuoNode<Long, CharDataType>> CONSTRUCT_CACHE = new HashMap<>();
+
+    @ObjectCacheClearer( customCheckDelay = 1000 )
+    public static void clearCache(long delay) {
+        long time = System.currentTimeMillis();
+        for (String key : CONSTRUCT_CACHE.keySet()) {
+            DuoNode<Long, CharDataType> node = CONSTRUCT_CACHE.get(key);
+            if (time - node.getLeft() > delay * 1000) {
+                CONSTRUCT_CACHE.remove(key);
+            }
+        }
+    }
 
     @ObjectConstructor
     public static CharDataType construct(String val) {
         if (val == null || val.length() != 1) {
             return null;
         }
-        return new CharDataType(val.charAt(0));
+        long time = System.currentTimeMillis();
+        DuoNode<Long, CharDataType> node = CONSTRUCT_CACHE.computeIfAbsent(val, k -> new DuoNode<>(time, new CharDataType(val.charAt(0))));
+        if (node.getLeft() != time) {
+            node.setLeft(time);
+        }
+        return node.getRight();
     }
 
     @ObjectMatcher
