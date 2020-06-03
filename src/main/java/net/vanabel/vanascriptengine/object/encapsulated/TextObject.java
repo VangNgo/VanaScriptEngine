@@ -18,7 +18,7 @@ public class TextObject extends EncapsulatedObject {
     static {
         registerAttributes(
                 (Attribute.DirectProcessor<TextObject>) (object, attribute) ->
-                        new BooleanDataType(object.value.isEmpty()),
+                        BooleanDataType.getForBoolean(object.value.isEmpty()),
                 "is_empty", "isEmpty"
         );
         registerAttributes(

@@ -41,7 +41,7 @@ public abstract class EncapsulatedObject extends AbstractObject implements Attri
             ////////////////////////////////////////////////////////////////////
             // Downgrade (equivalent to casting upwards in Java)
             registerAttributes(
-                    (Attribute.DirectProcessor<T>) (object, attribute) -> new BooleanDataType(object instanceof Downgradeable),
+                    (Attribute.DirectProcessor<T>) (object, attribute) -> BooleanDataType.getForBoolean(object instanceof Downgradeable),
                     "downgradeable"
             );
             registerAttributes(
@@ -57,7 +57,7 @@ public abstract class EncapsulatedObject extends AbstractObject implements Attri
             ////////////////////////////////////////////////////////////////////
             // Modifiable
             registerAttributes(
-                    (Attribute.DirectProcessor<T>) (object, attribute) -> new BooleanDataType(object instanceof Modifiable),
+                    (Attribute.DirectProcessor<T>) (object, attribute) -> BooleanDataType.getForBoolean(object instanceof Modifiable),
                     "modifiable"
             );
             registerAttributes(

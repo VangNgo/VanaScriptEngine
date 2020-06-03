@@ -1,8 +1,16 @@
 package net.vanabel.vanascriptengine.object.datatype;
 
 import net.vanabel.vanascriptengine.object.annotation.ObjectConstructor;
+import net.vanabel.vanascriptengine.object.annotation.ObjectMatcher;
 
-public class BooleanDataType extends DataTypeObject {
+public final class BooleanDataType extends DataTypeObject {
+
+    public final static BooleanDataType TRUE = new BooleanDataType(true);
+    public final static BooleanDataType FALSE = new BooleanDataType(false);
+
+    public static BooleanDataType getForBoolean(boolean b) {
+        return b ? TRUE : FALSE;
+    }
 
     @ObjectConstructor
     public static BooleanDataType construct(String val) {
@@ -12,17 +20,22 @@ public class BooleanDataType extends DataTypeObject {
         switch (val) {
             case "true":
             case "1":
-                return new BooleanDataType(true);
+                return TRUE;
             case "false":
             case "0":
-                return new BooleanDataType(false);
+                return FALSE;
         }
         return null;
     }
 
+    @ObjectMatcher
+    public static boolean matches(String val) {
+        return val != null && val.matches("^true|false|0|1$");
+    }
+
     private boolean val;
 
-    public BooleanDataType(boolean b) {
+    BooleanDataType(boolean b) {
         val = b;
     }
 
