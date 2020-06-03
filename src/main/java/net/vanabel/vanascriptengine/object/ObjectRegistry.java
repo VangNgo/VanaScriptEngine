@@ -4,9 +4,11 @@ import net.vanabel.vanascriptengine.attribute.Attributable;
 import net.vanabel.vanascriptengine.attribute.Attribute;
 import net.vanabel.vanascriptengine.modifier.Modifiable;
 import net.vanabel.vanascriptengine.modifier.Modifier;
+import net.vanabel.vanascriptengine.object.annotation.ObjectCacheClearer;
 import net.vanabel.vanascriptengine.object.annotation.ObjectConstructor;
 import net.vanabel.vanascriptengine.object.annotation.ObjectMatcher;
 import net.vanabel.vanascriptengine.object.datatype.DataTypeObject;
+import net.vanabel.vanascriptengine.util.reflection.ReflectionHelper;
 
 import java.lang.annotation.Annotation;
 import java.lang.invoke.CallSite;
@@ -51,21 +53,18 @@ public final class ObjectRegistry {
     private final static String MODIFIER_HANDLER_FIELD_NAME = "MODIFIER_HANDLER";
 
     private static MatcherMethod getMatcherFromClass(Class<? extends AbstractObject> objClass) {
+        Method m = null;
+        boolean mAccess = true;
         try {
-            String methodName = null;
-            for (Method m : objClass.getDeclaredMethods()) {
-                for (Annotation a : m.getAnnotations()) {
-                    if (a.annotationType() == ObjectMatcher.class) {
-                        methodName = m.getName();
-                        break;
-                    }
-                }
-            }
-
-            if (methodName == null) {
+            Method[] mArray = ReflectionHelper.getMethodsForAnnotation(objClass, ObjectMatcher.class);
+            if (mArray.length == 0) {
                 return null;
             }
 
+            m = mArray[0];
+            mAccess = m.isAccessible();
+            m.setAccessible(true);
+            String methodName = m.getName();
             final MethodHandles.Lookup lookup = MethodHandles.lookup();
             MethodType typeForBoolean = MethodType.methodType(Boolean.class, String.class).unwrap();
             CallSite site = LambdaMetafactory.metafactory(
@@ -81,25 +80,27 @@ public final class ObjectRegistry {
         catch (Throwable t) {
             return null;
         }
+        finally {
+            if (m != null) {
+                m.setAccessible(mAccess);
+            }
+        }
     }
 
     @SuppressWarnings("unchecked")
     private static <T extends AbstractObject> ConstructorMethod<T> getConstrFromClass(Class<T> objClass) {
+        Method m = null;
+        boolean mAccess = true;
         try {
-            String methodName = null;
-            for (Method m : objClass.getDeclaredMethods()) {
-                for (Annotation a : m.getAnnotations()) {
-                    if (a.annotationType() == ObjectConstructor.class) {
-                        methodName = m.getName();
-                        break;
-                    }
-                }
-            }
-
-            if (methodName == null) {
+            Method[] mArray = ReflectionHelper.getMethodsForAnnotation(objClass, ObjectConstructor.class);
+            if (mArray.length == 0) {
                 return null;
             }
 
+            m = mArray[0];
+            mAccess = m.isAccessible();
+            m.setAccessible(true);
+            String methodName = m.getName();
             final MethodHandles.Lookup lookup = MethodHandles.lookup();
             MethodType type = MethodType.methodType(objClass, String.class);
             CallSite site = LambdaMetafactory.metafactory(
@@ -114,6 +115,11 @@ public final class ObjectRegistry {
         }
         catch (Throwable t) {
             return null;
+        }
+        finally {
+            if (m != null) {
+                m.setAccessible(mAccess);
+            }
         }
     }
 
@@ -359,5 +365,23 @@ public final class ObjectRegistry {
             return null;
         }
         return objType.con().construct(value);
+    }
+
+    public static <T extends AbstractObject> void clearCacheFor(Class<T> objClass) {
+        try {
+            for (Method m : ReflectionHelper.getMethodsForAnnotation(objClass, ObjectCacheClearer.class)) {
+                m.setAccessible(true);
+                m.invoke(null, m.getAnnotation(ObjectCacheClearer.class).clearDelay());
+            }
+        }
+        catch (Exception e) {
+            // Do nothing.
+        }
+    }
+
+    public static void clearCacheForAll() {
+        for (Class<? extends AbstractObject> objClss : CLASS_TO_OBJECT.keySet()) {
+            clearCacheFor(objClss);
+        }
     }
 }
