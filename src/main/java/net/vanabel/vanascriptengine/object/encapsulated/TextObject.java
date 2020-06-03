@@ -10,6 +10,7 @@ import net.vanabel.vanascriptengine.util.conversion.StringUtils;
 public class TextObject extends EncapsulatedObject {
 
     public final static AttributeHandler<TextObject> ATTRIBUTE_HANDLER = new AttributeHandler<>();
+    public final static TextObject EMPTY = new TextObject("");
 
     public static void registerAttributes(Attribute.Processor<TextObject> processor, String... names) {
         ATTRIBUTE_HANDLER.registerAttributes(processor, names);
@@ -61,7 +62,7 @@ public class TextObject extends EncapsulatedObject {
         if (val == null) {
             throw new IllegalArgumentException("Cannot use a null string!");
         }
-        return new TextObject(val);
+        return val.isEmpty() ? EMPTY : new TextObject(val);
     }
 
     @ObjectMatcher
