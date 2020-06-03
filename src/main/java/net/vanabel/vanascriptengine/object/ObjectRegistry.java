@@ -10,7 +10,6 @@ import net.vanabel.vanascriptengine.object.annotation.ObjectMatcher;
 import net.vanabel.vanascriptengine.object.datatype.DataTypeObject;
 import net.vanabel.vanascriptengine.util.reflection.ReflectionHelper;
 
-import java.lang.annotation.Annotation;
 import java.lang.invoke.CallSite;
 import java.lang.invoke.LambdaMetafactory;
 import java.lang.invoke.MethodHandles;
@@ -56,7 +55,7 @@ public final class ObjectRegistry {
         Method m = null;
         boolean mAccess = true;
         try {
-            Method[] mArray = ReflectionHelper.getMethodsForAnnotation(objClass, ObjectMatcher.class);
+            Method[] mArray = ReflectionHelper.getStaticMethodsForAnnotation(objClass, ObjectMatcher.class);
             if (mArray.length == 0) {
                 return null;
             }
@@ -92,7 +91,7 @@ public final class ObjectRegistry {
         Method m = null;
         boolean mAccess = true;
         try {
-            Method[] mArray = ReflectionHelper.getMethodsForAnnotation(objClass, ObjectConstructor.class);
+            Method[] mArray = ReflectionHelper.getStaticMethodsForAnnotation(objClass, ObjectConstructor.class);
             if (mArray.length == 0) {
                 return null;
             }
@@ -369,7 +368,7 @@ public final class ObjectRegistry {
 
     public static <T extends AbstractObject> void clearCacheFor(Class<T> objClass) {
         try {
-            for (Method m : ReflectionHelper.getMethodsForAnnotation(objClass, ObjectCacheClearer.class)) {
+            for (Method m : ReflectionHelper.getStaticMethodsForAnnotation(objClass, ObjectCacheClearer.class)) {
                 m.setAccessible(true);
                 m.invoke(null, m.getAnnotation(ObjectCacheClearer.class).clearDelay());
             }
