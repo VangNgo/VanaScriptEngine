@@ -53,7 +53,6 @@ public final class ObjectRegistry {
 
     private static MatcherMethod getMatcherFromClass(Class<? extends AbstractObject> objClass) {
         Method m = null;
-        boolean mAccess = true;
         try {
             Method[] mArray = ReflectionHelper.getStaticMethodsForAnnotation(objClass, ObjectMatcher.class);
             if (mArray.length == 0) {
@@ -61,7 +60,6 @@ public final class ObjectRegistry {
             }
 
             m = mArray[0];
-            mAccess = m.isAccessible();
             m.setAccessible(true);
             String methodName = m.getName();
             final MethodHandles.Lookup lookup = MethodHandles.lookup();
@@ -81,7 +79,7 @@ public final class ObjectRegistry {
         }
         finally {
             if (m != null) {
-                m.setAccessible(mAccess);
+                m.setAccessible(false);
             }
         }
     }
@@ -89,7 +87,6 @@ public final class ObjectRegistry {
     @SuppressWarnings("unchecked")
     private static <T extends AbstractObject> ConstructorMethod<T> getConstrFromClass(Class<T> objClass) {
         Method m = null;
-        boolean mAccess = true;
         try {
             Method[] mArray = ReflectionHelper.getStaticMethodsForAnnotation(objClass, ObjectConstructor.class);
             if (mArray.length == 0) {
@@ -97,7 +94,6 @@ public final class ObjectRegistry {
             }
 
             m = mArray[0];
-            mAccess = m.isAccessible();
             m.setAccessible(true);
             String methodName = m.getName();
             final MethodHandles.Lookup lookup = MethodHandles.lookup();
@@ -117,7 +113,7 @@ public final class ObjectRegistry {
         }
         finally {
             if (m != null) {
-                m.setAccessible(mAccess);
+                m.setAccessible(false);
             }
         }
     }
@@ -367,14 +363,22 @@ public final class ObjectRegistry {
     }
 
     public static <T extends AbstractObject> void clearCacheFor(Class<T> objClass) {
+        Method lastMethod = null;
         try {
             for (Method m : ReflectionHelper.getStaticMethodsForAnnotation(objClass, ObjectCacheClearer.class)) {
                 m.setAccessible(true);
+                lastMethod = m;
                 m.invoke(null, m.getAnnotation(ObjectCacheClearer.class).clearDelay());
+                m.setAccessible(false);
             }
         }
         catch (Exception e) {
             // Do nothing.
+        }
+        finally {
+            if (lastMethod != null) {
+                lastMethod.setAccessible(false);
+            }
         }
     }
 
