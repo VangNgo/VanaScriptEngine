@@ -25,33 +25,7 @@ public final class ReflectionHelper {
             return null; // Quietly fail
         }
 
-        Set<Field> fieldSet = new HashSet<>();
-        boolean isFilled = false;
-
-        // Never send an anonymous class to the cache!
-        if (!clss.isAnonymousClass()) {
-            Map<Class<? extends Annotation>, Set<Field>> fieldCache = ANNOTATED_STATIC_FIELD_CACHE
-                    .computeIfAbsent(clss, k -> new HashMap<>());
-            if (fieldCache.containsKey(aClss)) {
-                fieldSet = fieldCache.get(aClss);
-                isFilled = true;
-            }
-            else {
-                fieldCache.put(aClss, fieldSet);
-            }
-        }
-
-        if (!isFilled) {
-            for (Field f : clss.getDeclaredFields()) {
-                f.setAccessible(true);
-                int mod = f.getModifiers();
-                if (Modifier.isStatic(mod) && (!onlyPublic || Modifier.isPublic(mod)) && f.isAnnotationPresent(aClss)) {
-                    fieldSet.add(f);
-                }
-                f.setAccessible(false);
-            }
-        }
-        return fieldSet.toArray(new Field[0]);
+        return fetchAnnotatedFields(clss, aClss, ANNOTATED_STATIC_FIELD_CACHE, true, onlyPublic);
     }
 
     public static Field[] getInstanceFieldsForAnnotation(Object obj, Class<? extends Annotation> aClss) {
@@ -63,34 +37,7 @@ public final class ReflectionHelper {
             return null; // Quietly fail
         }
 
-        Class<?> clss = obj.getClass();
-        Set<Field> fieldSet = new HashSet<>();
-        boolean isFilled = false;
-
-        // Never send an anonymous class to the cache!
-        if (!clss.isAnonymousClass()) {
-            Map<Class<? extends Annotation>, Set<Field>> fieldCache = ANNOTATED_INSTANCE_FIELD_CACHE
-                    .computeIfAbsent(clss, k -> new HashMap<>());
-            if (fieldCache.containsKey(aClss)) {
-                fieldSet = fieldCache.get(aClss);
-                isFilled = true;
-            }
-            else {
-                fieldCache.put(aClss, fieldSet);
-            }
-        }
-
-        if (!isFilled) {
-            for (Field f : clss.getDeclaredFields()) {
-                f.setAccessible(true);
-                int mod = f.getModifiers();
-                if (!Modifier.isStatic(mod) && (!onlyPublic || Modifier.isPublic(mod)) && f.isAnnotationPresent(aClss)) {
-                    fieldSet.add(f);
-                }
-                f.setAccessible(false);
-            }
-        }
-        return fieldSet.toArray(new Field[0]);
+        return fetchAnnotatedFields(obj.getClass(), aClss, ANNOTATED_INSTANCE_FIELD_CACHE, false, onlyPublic);
     }
 
     public static Method[] getStaticMethodsForAnnotation(Class<?> clss, Class<? extends Annotation> aClss) {
@@ -102,33 +49,7 @@ public final class ReflectionHelper {
             return null; // Quietly fail
         }
 
-        Set<Method> methodSet = new HashSet<>();
-        boolean isFilled = false;
-
-        // Never send an anonymous class to the cache!
-        if (!clss.isAnonymousClass()) {
-            Map<Class<? extends Annotation>, Set<Method>> methodCache = ANNOTATED_STATIC_METHOD_CACHE
-                    .computeIfAbsent(clss, k -> new HashMap<>());
-            if (methodCache.containsKey(aClss)) {
-                methodSet = methodCache.get(aClss);
-                isFilled = true;
-            }
-            else {
-                methodCache.put(aClss, methodSet);
-            }
-        }
-
-        if (!isFilled) {
-            for (Method m : clss.getDeclaredMethods()) {
-                m.setAccessible(true);
-                int mod = m.getModifiers();
-                if (Modifier.isStatic(mod) && (!onlyPublic || Modifier.isPublic(mod)) && m.isAnnotationPresent(aClss)) {
-                    methodSet.add(m);
-                }
-                m.setAccessible(false);
-            }
-        }
-        return methodSet.toArray(new Method[0]);
+        return fetchAnnotatedMethods(clss, aClss, ANNOTATED_STATIC_METHOD_CACHE, true, onlyPublic);
     }
 
     public static Method[] getInstanceMethodsForAnnotation(Object obj, Class<? extends Annotation> aClss) {
@@ -140,14 +61,62 @@ public final class ReflectionHelper {
             return null; // Quietly fail
         }
 
-        Class<?> clss = obj.getClass();
+        return fetchAnnotatedMethods(obj.getClass(), aClss, ANNOTATED_INSTANCE_METHOD_CACHE, false, onlyPublic);
+    }
+
+    private static Field[] fetchAnnotatedFields(Class<?> clss, Class<? extends Annotation> aClss, Map<Class<?>,
+            Map<Class<? extends Annotation>, Set<Field>>> cache, boolean isStatic, boolean onlyPublic) {
+        Map<Class<? extends Annotation>, Set<Field>> fieldCache = cache.computeIfAbsent(clss, k -> new HashMap<>());
+        Set<Field> fieldSet = new HashSet<>();
+        boolean isFilled = false;
+
+        // Never send an anonymous class to the cache!
+        if (!clss.isAnonymousClass()) {
+            if (fieldCache.containsKey(aClss)) {
+                fieldSet = fieldCache.get(aClss);
+                isFilled = true;
+            }
+            else {
+                fieldCache.put(aClss, fieldSet);
+            }
+        }
+
+        if (!isFilled) {
+            Field lastField = null;
+            try {
+                for (Field f : clss.getDeclaredFields()) {
+                    lastField = f;
+                    f.setAccessible(true);
+                    int mod = f.getModifiers();
+                    boolean fStatic = Modifier.isStatic(f.getModifiers());
+                    if (((isStatic && fStatic) || (!isStatic && !fStatic)) &&
+                            (!onlyPublic || Modifier.isPublic(mod)) &&
+                            f.isAnnotationPresent(aClss)) {
+                        fieldSet.add(f);
+                    }
+                    f.setAccessible(false);
+                }
+            }
+            // If an exception is encountered, don't cache the improperly-populated set and quietly fail
+            catch (Exception e) {
+                if (lastField != null) {
+                    lastField.setAccessible(false);
+                }
+                fieldCache.remove(aClss);
+                return null;
+            }
+        }
+        return fieldSet.toArray(new Field[0]);
+    }
+
+    private static Method[] fetchAnnotatedMethods(Class<?> clss, Class<? extends Annotation> aClss,
+            Map<Class<?>, Map<Class<? extends Annotation>, Set<Method>>> cache, boolean isStatic, boolean onlyPublic) {
+        Map<Class<? extends Annotation>, Set<Method>> methodCache = cache.computeIfAbsent(clss, k -> new HashMap<>());
         Set<Method> methodSet = new HashSet<>();
         boolean isFilled = false;
 
         // Never send an anonymous object to the cache!
         if (!clss.isAnonymousClass()) {
-            Map<Class<? extends Annotation>, Set<Method>> methodCache = ANNOTATED_INSTANCE_METHOD_CACHE
-                    .computeIfAbsent(clss, k -> new HashMap<>());
             if (methodCache.containsKey(aClss)) {
                 methodSet = methodCache.get(aClss);
                 isFilled = true;
@@ -158,13 +127,28 @@ public final class ReflectionHelper {
         }
 
         if (!isFilled) {
-            for (Method m : obj.getClass().getMethods()) {
-                m.setAccessible(true);
-                int mod = m.getModifiers();
-                if (!Modifier.isStatic(mod) && (!onlyPublic || Modifier.isPublic(mod)) && m.isAnnotationPresent(aClss)) {
-                    methodSet.add(m);
+            Method lastMethod = null;
+            try {
+                for (Method m : clss.getMethods()) {
+                    lastMethod = m;
+                    m.setAccessible(true);
+                    int mod = m.getModifiers();
+                    boolean mStatic = Modifier.isStatic(m.getModifiers());
+                    if (((isStatic && mStatic) || (!isStatic && !mStatic)) &&
+                            (!onlyPublic || Modifier.isPublic(mod)) &&
+                            m.isAnnotationPresent(aClss)) {
+                        methodSet.add(m);
+                    }
+                    m.setAccessible(false);
                 }
-                m.setAccessible(false);
+            }
+            // If an exception is encountered, don't cache the improperly-populated set and quietly fail
+            catch (Exception e) {
+                if (lastMethod != null) {
+                    lastMethod.setAccessible(false);
+                }
+                methodCache.remove(aClss);
+                return null;
             }
         }
         return methodSet.toArray(new Method[0]);

@@ -337,7 +337,7 @@ public final class ObjectRegistry {
     private interface AttrModType<T extends AbstractObject & Attributable & Modifiable> extends AttrType<T>, ModType<T> {}
 
     private static MatcherMethod getMatcherFromClass(Class<? extends AbstractObject> objClass)
-            throws IllegalStateException{
+            throws IllegalStateException {
         Method m = null;
         try {
             Method[] mArray = ReflectionHelper.getStaticMethodsForAnnotation(objClass, ObjectMatcher.class);
