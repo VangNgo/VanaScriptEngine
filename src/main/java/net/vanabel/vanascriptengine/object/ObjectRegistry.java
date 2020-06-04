@@ -20,134 +20,6 @@ import java.util.Map;
 
 public final class ObjectRegistry {
 
-    @FunctionalInterface
-    private interface ConstructorMethod<T extends AbstractObject> {
-        T construct(String val);
-    }
-
-    @FunctionalInterface
-    private interface MatcherMethod {
-        boolean matches(String val);
-    }
-
-    private interface ObjType<T extends AbstractObject> {
-        ConstructorMethod<T> con();
-        MatcherMethod mat();
-    }
-
-    // Placeholder for data types
-    private interface DataObjType<T extends DataTypeObject> extends ObjType<T> {}
-
-    private interface AttrType<T extends AbstractObject & Attributable> extends ObjType<T> {
-        Attribute.Handler<T> aH();
-    }
-
-    private interface ModType<T extends AbstractObject & Modifiable> extends ObjType<T> {
-        Modifier.Handler<T> mH();
-    }
-
-    private interface AttrModType<T extends AbstractObject & Attributable & Modifiable> extends AttrType<T>, ModType<T> {}
-
-    private final static String ATTRIBUTE_HANDLER_FIELD_NAME = "ATTRIBUTE_HANDLER";
-    private final static String MODIFIER_HANDLER_FIELD_NAME = "MODIFIER_HANDLER";
-
-    private static MatcherMethod getMatcherFromClass(Class<? extends AbstractObject> objClass)
-            throws IllegalStateException{
-        Method m = null;
-        try {
-            Method[] mArray = ReflectionHelper.getStaticMethodsForAnnotation(objClass, ObjectMatcher.class);
-            if (mArray.length != 1) {
-                throw new IllegalStateException("All AbstractObject implementations must have only one static " +
-                        "method with the ObjectMatcher annotation!");
-            }
-
-            m = mArray[0];
-            m.setAccessible(true);
-            String methodName = m.getName();
-            final MethodHandles.Lookup lookup = MethodHandles.lookup();
-            MethodType typeForBoolean = MethodType.methodType(Boolean.class, String.class).unwrap();
-            CallSite site = LambdaMetafactory.metafactory(
-                    lookup,
-                    "matches",
-                    MethodType.methodType(MatcherMethod.class),
-                    typeForBoolean,
-                    lookup.findStatic(objClass, methodName, typeForBoolean),
-                    typeForBoolean
-            );
-            return (MatcherMethod) site.getTarget().invoke();
-        }
-        catch (Throwable t) {
-            throw new IllegalStateException("Could not fetch a matcher method from " + objClass.getName() + "!");
-        }
-        finally {
-            if (m != null) {
-                m.setAccessible(false);
-            }
-        }
-    }
-
-    @SuppressWarnings("unchecked")
-    private static <T extends AbstractObject> ConstructorMethod<T> getConstrFromClass(Class<T> objClass)
-            throws IllegalStateException {
-        Method m = null;
-        try {
-            Method[] mArray = ReflectionHelper.getStaticMethodsForAnnotation(objClass, ObjectConstructor.class);
-            if (mArray.length != 1) {
-                throw new IllegalStateException("All AbstractObject implementations must have only one static " +
-                        "method with the ObjectConstructor annotation!");
-            }
-
-            m = mArray[0];
-            m.setAccessible(true);
-            String methodName = m.getName();
-            final MethodHandles.Lookup lookup = MethodHandles.lookup();
-            MethodType type = MethodType.methodType(objClass, String.class);
-            CallSite site = LambdaMetafactory.metafactory(
-                    lookup,
-                    "construct",
-                    MethodType.methodType(ConstructorMethod.class),
-                    MethodType.methodType(AbstractObject.class, String.class),
-                    lookup.findStatic(objClass, methodName, type),
-                    type
-            );
-            return (ConstructorMethod<T>) site.getTarget().invoke();
-        }
-        catch (Throwable t) {
-            throw new IllegalStateException("Could not fetch a construction method from " + objClass.getName() + "!");
-        }
-        finally {
-            if (m != null) {
-                m.setAccessible(false);
-            }
-        }
-    }
-
-    @SuppressWarnings("unchecked")
-    private static <T extends AbstractObject & Attributable> Attribute.Handler<T> getAttrHandFromClass(Class<T> objClass)
-            throws IllegalStateException {
-        try {
-            return (Attribute.Handler<T>) objClass.getDeclaredField(ATTRIBUTE_HANDLER_FIELD_NAME).get(null);
-        }
-        catch (Exception e) {
-            throw new IllegalStateException("Attributable object \"" + objClass.getSimpleName() + "\" does not have " +
-                                            "a field \"ATTRIBUTE_HANDLER\" with an AttributeHandler!");
-        }
-    }
-
-    @SuppressWarnings("unchecked")
-    private static <T extends AbstractObject & Modifiable> Modifier.Handler<T> getModHandFromClass(Class<T> objClass)
-            throws IllegalStateException {
-        try {
-            return (Modifier.Handler<T>) objClass.getDeclaredField(MODIFIER_HANDLER_FIELD_NAME).get(null);
-        }
-        catch (Exception e) {
-            throw new IllegalStateException("Modifiable object \"" + objClass.getSimpleName() + "\" does not have a " +
-                                            "field \"MODIFIER_HANDLER\" with a ModifierHandler!");
-        }
-    }
-
-
-
     private final static Map<Class<? extends AbstractObject>, ObjType<? extends AbstractObject>> CLASS_TO_OBJECT = new HashMap<>();
 
     public static <T extends DataTypeObject> boolean registerDataType(Class<T> objClass) {
@@ -425,6 +297,137 @@ public final class ObjectRegistry {
     public static void clearCacheForAll() {
         for (Class<? extends AbstractObject> objClss : CLASS_TO_OBJECT.keySet()) {
             clearCacheFor(objClss);
+        }
+    }
+
+
+
+    ////////////////////////////////////////////////////////////////////////////////////////////////
+    // Private helping methods, interfaces, and fields
+
+    private final static String ATTRIBUTE_HANDLER_FIELD_NAME = "ATTRIBUTE_HANDLER";
+    private final static String MODIFIER_HANDLER_FIELD_NAME = "MODIFIER_HANDLER";
+
+    @FunctionalInterface
+    private interface ConstructorMethod<T extends AbstractObject> {
+        T construct(String val);
+    }
+
+    @FunctionalInterface
+    private interface MatcherMethod {
+        boolean matches(String val);
+    }
+
+    private interface ObjType<T extends AbstractObject> {
+        ConstructorMethod<T> con();
+        MatcherMethod mat();
+    }
+
+    // Placeholder for data types
+    private interface DataObjType<T extends DataTypeObject> extends ObjType<T> {}
+
+    private interface AttrType<T extends AbstractObject & Attributable> extends ObjType<T> {
+        Attribute.Handler<T> aH();
+    }
+
+    private interface ModType<T extends AbstractObject & Modifiable> extends ObjType<T> {
+        Modifier.Handler<T> mH();
+    }
+
+    private interface AttrModType<T extends AbstractObject & Attributable & Modifiable> extends AttrType<T>, ModType<T> {}
+
+    private static MatcherMethod getMatcherFromClass(Class<? extends AbstractObject> objClass)
+            throws IllegalStateException{
+        Method m = null;
+        try {
+            Method[] mArray = ReflectionHelper.getStaticMethodsForAnnotation(objClass, ObjectMatcher.class);
+            if (mArray.length != 1) {
+                throw new IllegalStateException("All AbstractObject implementations must have only one static " +
+                        "method with the ObjectMatcher annotation!");
+            }
+
+            m = mArray[0];
+            m.setAccessible(true);
+            String methodName = m.getName();
+            final MethodHandles.Lookup lookup = MethodHandles.lookup();
+            MethodType typeForBoolean = MethodType.methodType(Boolean.class, String.class).unwrap();
+            CallSite site = LambdaMetafactory.metafactory(
+                    lookup,
+                    "matches",
+                    MethodType.methodType(MatcherMethod.class),
+                    typeForBoolean,
+                    lookup.findStatic(objClass, methodName, typeForBoolean),
+                    typeForBoolean
+            );
+            return (MatcherMethod) site.getTarget().invoke();
+        }
+        catch (Throwable t) {
+            throw new IllegalStateException("Could not fetch a matcher method from " + objClass.getName() + "!");
+        }
+        finally {
+            if (m != null) {
+                m.setAccessible(false);
+            }
+        }
+    }
+
+    @SuppressWarnings("unchecked")
+    private static <T extends AbstractObject> ConstructorMethod<T> getConstrFromClass(Class<T> objClass)
+            throws IllegalStateException {
+        Method m = null;
+        try {
+            Method[] mArray = ReflectionHelper.getStaticMethodsForAnnotation(objClass, ObjectConstructor.class);
+            if (mArray.length != 1) {
+                throw new IllegalStateException("All AbstractObject implementations must have only one static " +
+                        "method with the ObjectConstructor annotation!");
+            }
+
+            m = mArray[0];
+            m.setAccessible(true);
+            String methodName = m.getName();
+            final MethodHandles.Lookup lookup = MethodHandles.lookup();
+            MethodType type = MethodType.methodType(objClass, String.class);
+            CallSite site = LambdaMetafactory.metafactory(
+                    lookup,
+                    "construct",
+                    MethodType.methodType(ConstructorMethod.class),
+                    MethodType.methodType(AbstractObject.class, String.class),
+                    lookup.findStatic(objClass, methodName, type),
+                    type
+            );
+            return (ConstructorMethod<T>) site.getTarget().invoke();
+        }
+        catch (Throwable t) {
+            throw new IllegalStateException("Could not fetch a construction method from " + objClass.getName() + "!");
+        }
+        finally {
+            if (m != null) {
+                m.setAccessible(false);
+            }
+        }
+    }
+
+    @SuppressWarnings("unchecked")
+    private static <T extends AbstractObject & Attributable> Attribute.Handler<T> getAttrHandFromClass(Class<T> objClass)
+            throws IllegalStateException {
+        try {
+            return (Attribute.Handler<T>) objClass.getDeclaredField(ATTRIBUTE_HANDLER_FIELD_NAME).get(null);
+        }
+        catch (Exception e) {
+            throw new IllegalStateException("Attributable object \"" + objClass.getSimpleName() + "\" does not have " +
+                    "a field \"ATTRIBUTE_HANDLER\" with an AttributeHandler!");
+        }
+    }
+
+    @SuppressWarnings("unchecked")
+    private static <T extends AbstractObject & Modifiable> Modifier.Handler<T> getModHandFromClass(Class<T> objClass)
+            throws IllegalStateException {
+        try {
+            return (Modifier.Handler<T>) objClass.getDeclaredField(MODIFIER_HANDLER_FIELD_NAME).get(null);
+        }
+        catch (Exception e) {
+            throw new IllegalStateException("Modifiable object \"" + objClass.getSimpleName() + "\" does not have a " +
+                    "field \"MODIFIER_HANDLER\" with a ModifierHandler!");
         }
     }
 }
