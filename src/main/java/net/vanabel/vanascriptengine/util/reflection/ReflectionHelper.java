@@ -89,7 +89,7 @@ public final class ReflectionHelper {
                     f.setAccessible(true);
                     int mod = f.getModifiers();
                     boolean fStatic = Modifier.isStatic(f.getModifiers());
-                    if (((isStatic && fStatic) || (!isStatic && !fStatic)) &&
+                    if ((!isStatic || fStatic) &&
                             (!onlyPublic || Modifier.isPublic(mod)) &&
                             f.isAnnotationPresent(aClss)) {
                         fieldSet.add(f);
@@ -134,7 +134,7 @@ public final class ReflectionHelper {
                     m.setAccessible(true);
                     int mod = m.getModifiers();
                     boolean mStatic = Modifier.isStatic(m.getModifiers());
-                    if (((isStatic && mStatic) || (!isStatic && !mStatic)) &&
+                    if ((!isStatic || mStatic) &&
                             (!onlyPublic || Modifier.isPublic(mod)) &&
                             m.isAnnotationPresent(aClss)) {
                         methodSet.add(m);
