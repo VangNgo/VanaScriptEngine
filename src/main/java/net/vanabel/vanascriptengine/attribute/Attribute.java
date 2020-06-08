@@ -191,6 +191,13 @@ public class Attribute implements Cloneable {
     }
 
     public static Component[] getAttributeComponentsFromString(String str) {
+        if (str == null) {
+            return null;
+        }
+        if (str.isEmpty()) {
+            return new Component[0];
+        }
+
         Component[] finalResult = COMPONENTS_CACHE.get(str);
         if (finalResult != null) {
             return finalResult;
@@ -310,11 +317,10 @@ public class Attribute implements Cloneable {
     }
 
     public Attribute(String val) {
-        comps = getAttributeComponentsFromString(val);
-        rawVal = val;
+        this(val, getAttributeComponentsFromString(val));
     }
 
-    public Attribute(Component... c) {
+    public Attribute(Component[] c) {
         comps = c;
 
         StringBuilder sb = new StringBuilder();
@@ -322,6 +328,22 @@ public class Attribute implements Cloneable {
             sb.append(cPart.toString()).append('.');
         }
         rawVal = sb.substring(0, sb.length() - 1);
+    }
+
+    Attribute(String val, Component[] c) {
+        if (val == null) {
+            throw new IllegalArgumentException("Cannot have pass a null or empty string as the raw value of an attribute!");
+        }
+        if (c == null) {
+            c = new Component[0];
+        }
+        for (Component comp : c) {
+            if (comp == null) {
+                throw new IllegalArgumentException("Cannot have a null component!");
+            }
+        }
+        comps = c;
+        rawVal = val;
     }
 
     public Component getComponent() {
@@ -439,6 +461,14 @@ public class Attribute implements Cloneable {
     @Override
     public String toString() {
         return rawVal;
+    }
+
+    /**
+     * Returns a clone of this Attribute without
+     * @return
+     */
+    public Attribute imperfectClone() {
+        return new Attribute(rawVal, comps);
     }
 
     @Override
