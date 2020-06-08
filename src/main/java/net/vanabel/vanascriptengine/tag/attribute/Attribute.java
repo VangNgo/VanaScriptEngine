@@ -3,12 +3,12 @@ package net.vanabel.vanascriptengine.tag.attribute;
 import net.vanabel.vanascriptengine.object.AbstractObject;
 import net.vanabel.vanascriptengine.object.ObjectRegistry;
 import net.vanabel.vanascriptengine.object.encapsulated.TextObject;
+import net.vanabel.vanascriptengine.tag.TagParser;
 import net.vanabel.vanascriptengine.util.conversion.StringUtils;
 import net.vanabel.vanascriptengine.util.validator.ArrayValidator;
 import net.vanabel.vanascriptengine.util.validator.NumberValidator;
 import net.vanabel.vanascriptengine.util.validator.ObjectValidator;
 
-import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Set;
@@ -183,129 +183,6 @@ public class Attribute implements Cloneable {
         }
     }
 
-    private final static Map<String, Component[]> COMPONENTS_CACHE = new HashMap<>();
-
-    private static void throwIllegalArgumentForSyntax(String atr, int index, String msg) {
-        throw new IllegalArgumentException("Invalid syntax in the attribute string \"" + atr + "\" at index " + index +
-                ": " + msg);
-    }
-
-    public static Component[] getAttributeComponentsFromString(String str) {
-        if (str == null) {
-            return null;
-        }
-        if (str.isEmpty()) {
-            return new Component[0];
-        }
-
-        Component[] finalResult = COMPONENTS_CACHE.get(str);
-        if (finalResult != null) {
-            return finalResult;
-        }
-
-        ArrayList<Component> compList = new ArrayList<>(64);
-        int start = 0, end = -1, parens = 0;
-        String name = null, context = null;
-        boolean quoted = false, isDoubleQuote = false, hadContext = false;
-        Map<String, AbstractObject> cValFull = new HashMap<>();
-
-        for (int i = 0; i < str.length(); i++) {
-            char c = str.charAt(i);
-
-            switch (c) {
-                case '\\':
-                    if (!quoted && parens == 0) {
-                        throwIllegalArgumentForSyntax(str, i, "Illegal escape character found.");
-                    }
-                    break;
-                case '<':
-                case '>':
-                    if (!quoted && parens == 0) {
-                        throwIllegalArgumentForSyntax(str, i, "Stray tag mark found.");
-                    }
-                    break;
-                case '(':
-                    if (quoted) {
-                        continue;
-                    }
-                    if (parens == 0) {
-                        if (hadContext) {
-                            throwIllegalArgumentForSyntax(str, i, "Malformed attribute context.");
-                        }
-                        name = str.substring(start, i);
-                        hadContext = true;
-                    }
-                    parens++;
-                    break;
-                case ')':
-                    if (quoted) {
-                        continue;
-                    }
-                    if (parens <= 0) {
-                        throwIllegalArgumentForSyntax(str, i, "Imbalanced parentheses.");
-                    }
-                    parens--;
-                    break;
-                case '=':
-                    if (quoted) {
-                        continue;
-                    }
-                    if (parens == 0) {
-                        throwIllegalArgumentForSyntax(str, i, "Stray equals symbol [=] found.");
-                    }
-                    // TODO: This
-                    break;
-                case ';':
-                    if (quoted) {
-                        continue;
-                    }
-                    if (parens == 0) {
-                        throwIllegalArgumentForSyntax(str, i, "Stray semicolon [;] found.");
-                    }
-                    // TODO: This
-                    break;
-                case '"':
-                    if (parens == 0) {
-                        throwIllegalArgumentForSyntax(str, i, "Stray quote [\"] found.");
-                    }
-                    if (!quoted) {
-                        quoted = true;
-                        isDoubleQuote = true;
-                    }
-                    else if (isDoubleQuote) {
-                        quoted = false;
-                    }
-                    break;
-                case '\'':
-                    if (parens == 0) {
-                        throwIllegalArgumentForSyntax(str, i, "Stray quote ['] found.");
-                    }
-                    if (!quoted) {
-                        quoted = true;
-                        isDoubleQuote = false;
-                    }
-                    else if (!isDoubleQuote) {
-                        quoted = false;
-                    }
-                    break;
-                case '.':
-                    if (quoted || parens > 0) {
-                        continue;
-                    }
-                    hadContext = false;
-                    // TODO: This
-                    break;
-            }
-        }
-
-        finalResult = new Component[0];
-        compList.trimToSize();
-        compList.toArray(finalResult);
-
-        COMPONENTS_CACHE.put(str, finalResult);
-        return finalResult;
-    }
-
     private final Component[] comps;
     private final String rawVal;
 
@@ -317,7 +194,7 @@ public class Attribute implements Cloneable {
     }
 
     public Attribute(String val) {
-        this(val, getAttributeComponentsFromString(val));
+        this(val, TagParser.getComponentsFromAttributeString(val));
     }
 
     public Attribute(Component[] c) {

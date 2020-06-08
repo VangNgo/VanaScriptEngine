@@ -1,12 +1,12 @@
 package net.vanabel.vanascriptengine.object.encapsulated;
 
-import net.vanabel.vanascriptengine.tag.attribute.Attribute;
 import net.vanabel.vanascriptengine.object.AbstractObject;
 import net.vanabel.vanascriptengine.object.ObjectRegistry;
 import net.vanabel.vanascriptengine.object.annotation.ObjectConstructor;
 import net.vanabel.vanascriptengine.object.annotation.ObjectMatcher;
 import net.vanabel.vanascriptengine.object.datatype.BooleanDataType;
 import net.vanabel.vanascriptengine.object.datatype.IntegerDataType;
+import net.vanabel.vanascriptengine.tag.attribute.Attribute;
 
 import java.util.Collection;
 import java.util.HashSet;

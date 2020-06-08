@@ -1,13 +1,13 @@
 package net.vanabel.vanascriptengine.object.encapsulated;
 
-import net.vanabel.vanascriptengine.tag.attribute.Attributable;
-import net.vanabel.vanascriptengine.tag.attribute.Attribute;
 import net.vanabel.vanascriptengine.modifier.Modifiable;
 import net.vanabel.vanascriptengine.modifier.Modifier;
 import net.vanabel.vanascriptengine.object.AbstractObject;
 import net.vanabel.vanascriptengine.object.Downgradeable;
 import net.vanabel.vanascriptengine.object.ObjectRegistry;
 import net.vanabel.vanascriptengine.object.datatype.BooleanDataType;
+import net.vanabel.vanascriptengine.tag.attribute.Attributable;
+import net.vanabel.vanascriptengine.tag.attribute.Attribute;
 
 /**
  * Represents an encapsulated object type. All objects of this type are cloneable.

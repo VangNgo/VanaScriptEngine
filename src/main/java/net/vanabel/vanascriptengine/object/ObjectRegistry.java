@@ -1,13 +1,13 @@
 package net.vanabel.vanascriptengine.object;
 
-import net.vanabel.vanascriptengine.tag.attribute.Attributable;
-import net.vanabel.vanascriptengine.tag.attribute.Attribute;
 import net.vanabel.vanascriptengine.modifier.Modifiable;
 import net.vanabel.vanascriptengine.modifier.Modifier;
 import net.vanabel.vanascriptengine.object.annotation.ObjectCacheClearer;
 import net.vanabel.vanascriptengine.object.annotation.ObjectConstructor;
 import net.vanabel.vanascriptengine.object.annotation.ObjectMatcher;
 import net.vanabel.vanascriptengine.object.datatype.DataTypeObject;
+import net.vanabel.vanascriptengine.tag.attribute.Attributable;
+import net.vanabel.vanascriptengine.tag.attribute.Attribute;
 import net.vanabel.vanascriptengine.util.reflection.ReflectionHelper;
 
 import java.lang.invoke.CallSite;
