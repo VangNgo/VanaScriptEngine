@@ -1,7 +1,7 @@
 package net.vanabel.vanascriptengine.object;
 
-import net.vanabel.vanascriptengine.attribute.Attributable;
-import net.vanabel.vanascriptengine.attribute.Attribute;
+import net.vanabel.vanascriptengine.tag.attribute.Attributable;
+import net.vanabel.vanascriptengine.tag.attribute.Attribute;
 import net.vanabel.vanascriptengine.modifier.Modifiable;
 import net.vanabel.vanascriptengine.modifier.Modifier;
 import net.vanabel.vanascriptengine.object.annotation.ObjectCacheClearer;

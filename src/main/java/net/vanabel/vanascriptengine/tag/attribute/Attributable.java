@@ -1,4 +1,4 @@
-package net.vanabel.vanascriptengine.attribute;
+package net.vanabel.vanascriptengine.tag.attribute;
 
 /**
  * Represents an attributable object within this script engine.

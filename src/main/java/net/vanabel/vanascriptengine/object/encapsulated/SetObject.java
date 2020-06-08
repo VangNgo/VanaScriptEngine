@@ -1,6 +1,6 @@
 package net.vanabel.vanascriptengine.object.encapsulated;
 
-import net.vanabel.vanascriptengine.attribute.Attribute;
+import net.vanabel.vanascriptengine.tag.attribute.Attribute;
 import net.vanabel.vanascriptengine.object.AbstractObject;
 import net.vanabel.vanascriptengine.object.ObjectRegistry;
 import net.vanabel.vanascriptengine.object.annotation.ObjectConstructor;

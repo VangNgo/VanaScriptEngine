@@ -1,6 +1,6 @@
 package net.vanabel.vanascriptengine.object.encapsulated;
 
-import net.vanabel.vanascriptengine.attribute.Attribute;
+import net.vanabel.vanascriptengine.tag.attribute.Attribute;
 import net.vanabel.vanascriptengine.object.annotation.ObjectConstructor;
 import net.vanabel.vanascriptengine.object.annotation.ObjectMatcher;
 import net.vanabel.vanascriptengine.object.datatype.BooleanDataType;
