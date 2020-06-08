@@ -34,7 +34,9 @@ public abstract class AbstractTagBase {
      * method returns {@code null}, then the attribute immediately following the tag base will be processed.
      * @return An AbstractObject or null.
      */
-    public abstract AbstractObject getObjectResult();
+    public AbstractObject getObjectResult() {
+        return null;
+    }
 
     @Override
     public String toString() {
