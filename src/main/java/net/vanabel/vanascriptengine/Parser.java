@@ -1,4 +1,4 @@
-package net.vanabel.vanascriptengine.tag;
+package net.vanabel.vanascriptengine;
 
 import net.vanabel.vanascriptengine.object.AbstractObject;
 import net.vanabel.vanascriptengine.tag.attribute.Attribute;

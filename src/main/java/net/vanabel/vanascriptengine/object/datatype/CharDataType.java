@@ -10,19 +10,6 @@ import java.util.Map;
 
 public class CharDataType extends DataTypeObject {
 
-    private final static Map<String, DuoNode<Long, CharDataType>> CONSTRUCT_CACHE = new HashMap<>();
-
-    @ObjectCacheClearer( customCheckDelay = 1000 )
-    public static void clearCache(long delay) {
-        long time = System.currentTimeMillis();
-        for (String key : CONSTRUCT_CACHE.keySet()) {
-            DuoNode<Long, CharDataType> node = CONSTRUCT_CACHE.get(key);
-            if (time - node.getLeft() > delay) {
-                CONSTRUCT_CACHE.remove(key);
-            }
-        }
-    }
-
     @ObjectConstructor
     public static CharDataType construct(String val) {
         if (val == null || val.length() != 1) {
@@ -54,5 +41,23 @@ public class CharDataType extends DataTypeObject {
     @Override
     public String toString() {
         return String.valueOf(val);
+    }
+
+
+
+    ////////////////////////////////////////////////////////////////////////////
+    // Cache fields and methods
+
+    private final static Map<String, DuoNode<Long, CharDataType>> CONSTRUCT_CACHE = new HashMap<>();
+
+    @ObjectCacheClearer( customCheckDelay = 1000 )
+    public static void clearCache(long delay) {
+        long time = System.currentTimeMillis();
+        for (String key : CONSTRUCT_CACHE.keySet()) {
+            DuoNode<Long, CharDataType> node = CONSTRUCT_CACHE.get(key);
+            if (time - node.getLeft() > delay) {
+                CONSTRUCT_CACHE.remove(key);
+            }
+        }
     }
 }

@@ -11,11 +11,6 @@ import java.util.Set;
 
 public final class ReflectionHelper {
 
-    private final static Map<Class<?>, Map<Class<? extends Annotation>, Set<Method>>> ANNOTATED_STATIC_METHOD_CACHE = new HashMap<>();
-    private final static Map<Class<?>, Map<Class<? extends Annotation>, Set<Method>>> ANNOTATED_INSTANCE_METHOD_CACHE = new HashMap<>();
-    private final static Map<Class<?>, Map<Class<? extends Annotation>, Set<Field>>> ANNOTATED_STATIC_FIELD_CACHE = new HashMap<>();
-    private final static Map<Class<?>, Map<Class<? extends Annotation>, Set<Field>>> ANNOTATED_INSTANCE_FIELD_CACHE = new HashMap<>();
-
     public static Field[] getStaticFieldsForAnnotation(Class<?> clss, Class<? extends Annotation> aClss) {
         return getStaticFieldsForAnnotation(clss, aClss, false);
     }
@@ -63,6 +58,16 @@ public final class ReflectionHelper {
 
         return fetchAnnotatedMethods(obj.getClass(), aClss, ANNOTATED_INSTANCE_METHOD_CACHE, false, onlyPublic);
     }
+
+
+
+    ////////////////////////////////////////////////////////////////////////////
+    // Private caches and helping methods
+
+    private final static Map<Class<?>, Map<Class<? extends Annotation>, Set<Method>>> ANNOTATED_STATIC_METHOD_CACHE = new HashMap<>();
+    private final static Map<Class<?>, Map<Class<? extends Annotation>, Set<Method>>> ANNOTATED_INSTANCE_METHOD_CACHE = new HashMap<>();
+    private final static Map<Class<?>, Map<Class<? extends Annotation>, Set<Field>>> ANNOTATED_STATIC_FIELD_CACHE = new HashMap<>();
+    private final static Map<Class<?>, Map<Class<? extends Annotation>, Set<Field>>> ANNOTATED_INSTANCE_FIELD_CACHE = new HashMap<>();
 
     private static Field[] fetchAnnotatedFields(Class<?> clss, Class<? extends Annotation> aClss, Map<Class<?>,
             Map<Class<? extends Annotation>, Set<Field>>> cache, boolean isStatic, boolean onlyPublic) {

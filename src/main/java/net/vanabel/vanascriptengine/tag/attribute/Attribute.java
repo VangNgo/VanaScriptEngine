@@ -3,7 +3,7 @@ package net.vanabel.vanascriptengine.tag.attribute;
 import net.vanabel.vanascriptengine.object.AbstractObject;
 import net.vanabel.vanascriptengine.object.ObjectRegistry;
 import net.vanabel.vanascriptengine.object.encapsulated.TextObject;
-import net.vanabel.vanascriptengine.tag.TagParser;
+import net.vanabel.vanascriptengine.Parser;
 import net.vanabel.vanascriptengine.util.conversion.StringUtils;
 import net.vanabel.vanascriptengine.util.validator.ArrayValidator;
 import net.vanabel.vanascriptengine.util.validator.NumberValidator;
@@ -194,7 +194,7 @@ public class Attribute implements Cloneable {
     }
 
     public Attribute(String val) {
-        this(val, TagParser.getComponentsFromAttributeString(val));
+        this(val, Parser.getComponentsFromAttributeString(val));
     }
 
     public Attribute(Component[] c) {

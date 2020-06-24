@@ -13,25 +13,35 @@ import java.util.HashSet;
 import java.util.Iterator;
 import java.util.Set;
 
-public class SetObject<T extends AbstractObject> extends EncapsulatedObject implements Set<T> {
+public class SetObject extends EncapsulatedObject implements Set<AbstractObject> {
 
-    public final static AttributeHandler<SetObject<AbstractObject>> ATTRIBUTE_HANDLER = new AttributeHandler<>();
+    public final static AttributeHandler<SetObject> ATTRIBUTE_HANDLER = new AttributeHandler<>();
 
-    public static void registerAttributes(Attribute.Processor<SetObject<AbstractObject>> processor, String... names) {
+    public static void registerAttributes(Attribute.Processor<SetObject> processor, String... names) {
         ATTRIBUTE_HANDLER.registerAttributes(processor, names);
     }
 
     static {
         registerAttributes(
-                (Attribute.DirectProcessor<SetObject<AbstractObject>>) (object, attribute) -> new IntegerDataType(object.size()),
+                (Attribute.DirectProcessor<SetObject>) (object, attribute) -> new IntegerDataType(object.size()),
                 "size"
         );
         registerAttributes(
-                (Attribute.DirectProcessor<SetObject<AbstractObject>>) (object, attribute) -> BooleanDataType.getForBoolean(object.isEmpty()),
+                (Attribute.DirectProcessor<SetObject>) (object, attribute) -> BooleanDataType.getForBoolean(object.isEmpty()),
                 "is_empty", "isEmpty"
         );
         registerAttributes(
-                (Attribute.DirectProcessor<SetObject<AbstractObject>>) (object, attribute) -> {
+                (object, attribute) -> {
+                    Class<? extends AbstractObject> clss = object.clss;
+                    if (clss == AbstractObject.class) {
+                        return new TextObject("none");
+                    }
+                    // TODO: This
+                    return null;
+                }, "get_object_restriction", "getObjectRestriction"
+        );
+        registerAttributes(
+                (Attribute.DirectProcessor<SetObject>) (object, attribute) -> {
                     if (!attribute.hasContext()) {
                         // TODO: Debug
                         return BooleanDataType.getForBoolean(false);
@@ -46,16 +56,21 @@ public class SetObject<T extends AbstractObject> extends EncapsulatedObject impl
                         // TODO: Debug
                         return null;
                     }
-                    object.add(ObjectRegistry.constructForClass(attribute.getContext().getRaw(), object.clss));
+                    AbstractObject addObj = ObjectRegistry.constructForClass(attribute.getContext().getRaw(), object.clss);
+                    if (addObj == null) {
+                        // TODO: Debug
+                        return object;
+                    }
+                    object.add(addObj);
                     return object;
                 }, "add"
         );
     }
 
     @ObjectConstructor
-    public static <S extends AbstractObject> SetObject<S> construct(String value) {
+    public static SetObject construct(String value) {
         // TODO: Parse?
-        return new SetObject<>();
+        return new SetObject();
     }
 
     @ObjectMatcher
@@ -64,18 +79,23 @@ public class SetObject<T extends AbstractObject> extends EncapsulatedObject impl
         return false;
     }
 
-    private final Class<T> clss;
-    private final Set<T> data;
+    private final Class<? extends AbstractObject> clss;
+    private final Set<AbstractObject> data;
 
     public SetObject() {
-        this(new HashSet<>());
+        this(AbstractObject.class);
+    }
+
+    public SetObject(Class<? extends AbstractObject> clss) {
+        this.clss = clss;
+        this.data = new HashSet<>();
     }
 
     @SuppressWarnings("unchecked")
-    public SetObject(Set<T> set) {
-        data = set;
+    public SetObject(Set<? extends AbstractObject> set) {
+        data = (Set<AbstractObject>) set;
         try {
-            clss = (Class<T>) Class.forName(getClass().getField("data").getGenericType().getTypeName());
+            clss = (Class<AbstractObject>) Class.forName(getClass().getField("data").getGenericType().getTypeName());
         }
         catch (Exception e) {
             throw new RuntimeException("Unexpected error while constructing a SetObject!");
@@ -94,7 +114,14 @@ public class SetObject<T extends AbstractObject> extends EncapsulatedObject impl
 
     @Override
     public String toString() {
-        return null;
+        if (data.isEmpty()) {
+            return "set@" + hashCode() + "[]";
+        }
+        StringBuilder sb = new StringBuilder("set@").append(hashCode()).append('[');
+        for (AbstractObject obj : data) {
+            sb.append(obj.toString()).append(" , ");
+        }
+        return sb.substring(0, sb.length() - 3) + "]";
     }
 
     @Override
@@ -113,7 +140,7 @@ public class SetObject<T extends AbstractObject> extends EncapsulatedObject impl
     }
 
     @Override
-    public Iterator<T> iterator() {
+    public Iterator<AbstractObject> iterator() {
         return data.iterator();
     }
 
@@ -128,7 +155,7 @@ public class SetObject<T extends AbstractObject> extends EncapsulatedObject impl
     }
 
     @Override
-    public boolean add(T o) {
+    public boolean add(AbstractObject o) {
         return data.add(o);
     }
 
@@ -143,7 +170,7 @@ public class SetObject<T extends AbstractObject> extends EncapsulatedObject impl
     }
 
     @Override
-    public boolean addAll(Collection<? extends T> c) {
+    public boolean addAll(Collection<? extends AbstractObject> c) {
         return data.addAll(c);
     }
 

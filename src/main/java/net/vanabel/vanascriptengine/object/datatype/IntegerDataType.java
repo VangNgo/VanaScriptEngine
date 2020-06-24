@@ -15,19 +15,6 @@ import java.util.Map;
  */
 public class IntegerDataType extends DataTypeObject {
 
-    private final static Map<String, DuoNode<Long, IntegerDataType>> CONSTRUCT_CACHE = new HashMap<>();
-
-    @ObjectCacheClearer( customCheckDelay = 1000 )
-    public static void clearCache(long delay) {
-        long time = System.currentTimeMillis();
-        for (String key : CONSTRUCT_CACHE.keySet()) {
-            DuoNode<Long, IntegerDataType> node = CONSTRUCT_CACHE.get(key);
-            if (time - node.getLeft() > delay) {
-                CONSTRUCT_CACHE.remove(key);
-            }
-        }
-    }
-
     /**
      * Constructs an IntegerObject from a String. Accepts binary and hexadecimal inputs, as long as
      * they are formatted as Java literals.
@@ -114,5 +101,23 @@ public class IntegerDataType extends DataTypeObject {
     @Override
     public String toString() {
         return String.valueOf(val);
+    }
+
+
+
+    ////////////////////////////////////////////////////////////////////////////
+    // Cache fields and methods
+
+    private final static Map<String, DuoNode<Long, IntegerDataType>> CONSTRUCT_CACHE = new HashMap<>();
+
+    @ObjectCacheClearer( customCheckDelay = 1000 )
+    public static void clearCache(long delay) {
+        long time = System.currentTimeMillis();
+        for (String key : CONSTRUCT_CACHE.keySet()) {
+            DuoNode<Long, IntegerDataType> node = CONSTRUCT_CACHE.get(key);
+            if (time - node.getLeft() > delay) {
+                CONSTRUCT_CACHE.remove(key);
+            }
+        }
     }
 }

@@ -9,10 +9,31 @@ import net.vanabel.vanascriptengine.object.datatype.BooleanDataType;
 import net.vanabel.vanascriptengine.tag.attribute.Attributable;
 import net.vanabel.vanascriptengine.tag.attribute.Attribute;
 
+import java.util.HashSet;
+
 /**
  * Represents an encapsulated object type. All objects of this type are cloneable.
  */
 public abstract class EncapsulatedObject extends AbstractObject implements Attributable, Cloneable {
+
+    public abstract String getObjectTypeName();
+
+    public abstract String getObjectTypeNamePlural();
+
+    @Override
+    public EncapsulatedObject clone() {
+        try {
+            return (EncapsulatedObject) super.clone();
+        }
+        catch (CloneNotSupportedException cnse) {
+            return null;
+        }
+    }
+
+
+
+    ////////////////////////////////////////////////////////////////////////////
+    // Inner classes to streamline attribute/modifier handling
 
     public static class AttributeHandler<T extends EncapsulatedObject> extends Attribute.Handler<T> {
 
@@ -29,7 +50,7 @@ public abstract class EncapsulatedObject extends AbstractObject implements Attri
             );
             registerAttributes(
                     (Attribute.DirectProcessor<T>) (object, attribute) -> {
-                        SetObject<TextObject> names = new SetObject<>();
+                        SetObject names = new SetObject(new HashSet<TextObject>());
                         for (String a : getAttributes()) {
                             names.add(new TextObject(a));
                         }
@@ -62,7 +83,7 @@ public abstract class EncapsulatedObject extends AbstractObject implements Attri
             );
             registerAttributes(
                     (Attribute.DirectProcessor<T>) (object, attribute) -> {
-                        SetObject<TextObject> names = new SetObject<>();
+                        SetObject names = new SetObject(new HashSet<TextObject>());
                         Modifier.Handler<?> modHand = ObjectRegistry.getModifierHandlerFor(object.getClass());
                         if (modHand != null) {
                             for (String m : modHand.getModifiers()) {
@@ -134,20 +155,6 @@ public abstract class EncapsulatedObject extends AbstractObject implements Attri
                 // TODO: Debug
             }
             return isProcessed;
-        }
-    }
-
-    public abstract String getObjectTypeName();
-
-    public abstract String getObjectTypeNamePlural();
-
-    @Override
-    public EncapsulatedObject clone() {
-        try {
-            return (EncapsulatedObject) super.clone();
-        }
-        catch (CloneNotSupportedException cnse) {
-            return null;
         }
     }
 }

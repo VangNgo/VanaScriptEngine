@@ -9,6 +9,32 @@ import java.util.Set;
 
 public class Modifier {
 
+    private final String name;
+    private final String unprocessedValue;
+    // TODO: Context
+
+    public Modifier(String name, String value) {
+        this.name = name;
+        this.unprocessedValue = StringUtils.emptyAsNull(value);
+    }
+
+    public String getName() {
+        return name;
+    }
+
+    public boolean hasValue() {
+        return unprocessedValue != null;
+    }
+
+    public String getUnprocessedValue() {
+        return unprocessedValue;
+    }
+
+
+
+    ////////////////////////////////////////////////////////////////////////////
+    // Inner interfaces and classes
+
     @FunctionalInterface
     public interface Processor<T extends Modifiable> {
         boolean process(T object, Modifier modifier);
@@ -69,26 +95,5 @@ public class Modifier {
         }
 
         public abstract boolean processModifier(T object, Modifier modifier);
-    }
-
-    private final String name;
-    private final String unprocessedValue;
-    // TODO: Context
-
-    public Modifier(String name, String value) {
-        this.name = name;
-        this.unprocessedValue = StringUtils.emptyAsNull(value);
-    }
-
-    public String getName() {
-        return name;
-    }
-
-    public boolean hasValue() {
-        return unprocessedValue != null;
-    }
-
-    public String getUnprocessedValue() {
-        return unprocessedValue;
     }
 }
